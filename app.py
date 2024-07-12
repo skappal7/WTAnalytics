@@ -29,21 +29,19 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
 
     for _, row in filtered_data.iterrows():
         words = clean_text(row['Review'], stop_words, exclude_words)
-        words_counter.update(words)
+        for word in words:
+            words_counter[word] += 1
 
     tree = {"name": "root", "children": []}
     for word, count in words_counter.items():
         if min_occurrences <= count <= max_occurrences:
-            current_level = tree
-            for char in word:
-                match = next((child for child in current_level["children"] if child["name"] == char), None)
-                if match:
-                    current_level = match
-                else:
-                    new_node = {"name": char, "children": []}
-                    current_level["children"].append(new_node)
-                    current_level = new_node
-            current_level["size"] = count
+            word_node = {"name": word, "size": count, "sentiment": 0}
+            for _, row in filtered_data.iterrows():
+                if word in clean_text(row['Review'], stop_words, exclude_words):
+                    word_node["sentiment"] = row['sentiment']
+                    word_node["label"] = row['Label']
+                    word_node["category"] = row['Category']
+            tree["children"].append(word_node)
 
     return tree
 
@@ -63,12 +61,35 @@ if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
 
     stop_words = set(stopwords.words('english'))
-    exclude_words = st.text_input("Words to Exclude (comma separated)").split(',')
-    sentiment_filter = st.selectbox("Filter by Sentiment", ["All", "Positive", "Negative"])
-    min_occurrences = st.slider("Minimum Word Occurrences", 1, 10, 1)
-    max_occurrences = st.slider("Maximum Word Occurrences", 10, 100, 50)
+    exclude_words = st.sidebar.text_input("Words to Exclude (comma separated)").split(',')
+    sentiment_filter = st.sidebar.radio("Filter by Sentiment", ["All", "Positive", "Negative"])
+    min_occurrences = st.sidebar.slider("Minimum Word Occurrences", 1, 10, 1)
+    max_occurrences = st.sidebar.slider("Maximum Word Occurrences", 10, 100, 50)
 
     tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
     html_output = generate_word_tree_html(tree_data)
+
+    # Display review counts
+    total_reviews = len(data)
+    positive_reviews = len(data[data['sentiment'] > 0])
+    negative_reviews = len(data[data['sentiment'] < 0])
+    neutral_reviews = len(data[data['sentiment'] == 0])
+    
+    st.markdown(f"""
+    <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            <strong>Total Reviews</strong><br>{total_reviews}
+        </div>
+        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            <strong>Positive Reviews</strong><br>{positive_reviews}
+        </div>
+        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            <strong>Negative Reviews</strong><br>{negative_reviews}
+        </div>
+        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+            <strong>Neutral Reviews</strong><br>{neutral_reviews}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.components.v1.html(html_output, height=600)
