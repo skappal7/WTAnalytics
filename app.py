@@ -8,6 +8,7 @@ from collections import Counter
 import nltk
 
 nltk.download('stopwords')
+nltk.download('punkt')  # Ensure the punkt tokenizer is downloaded
 
 # Function to clean and process text
 def clean_text(text, stop_words, exclude_words):
