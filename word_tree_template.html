@@ -69,14 +69,15 @@
                 root;
 
             var zoom = d3.zoom().on("zoom", function (event) {
-                svg.attr("transform", event.transform);
+                g.attr("transform", event.transform);
             });
 
             var svg = d3.select("#wordTree").append("svg")
                 .attr("width", width + margin.right + margin.left)
                 .attr("height", height + margin.top + margin.bottom)
-                .call(zoom)
-                .append("g")
+                .call(zoom);
+
+            var g = svg.append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             var tooltip = d3.select("body").append("div")
@@ -106,7 +107,7 @@
 
                 nodes.forEach(function(d) { d.y = d.depth * 180 });
 
-                var node = svg.selectAll('g.node')
+                var node = g.selectAll('g.node')
                     .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
                 var nodeEnter = node.enter().append('g')
@@ -114,7 +115,20 @@
                     .attr("transform", function(d) {
                         return "translate(" + source.y0 + "," + source.x0 + ")";
                     })
-                    .on('click', click);
+                    .on('click', click)
+                    .on("mouseover", function(event, d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
+                            .style("left", (event.pageX) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(d) {
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                    });
 
                 nodeEnter.append('circle')
                     .attr('r', 10)
@@ -128,20 +142,6 @@
                     .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
                     .text(function(d) { return d.data.name; })
                     .style("fill-opacity", 1e-6);
-
-                nodeEnter.on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
-                        .style("left", (event.pageX) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function(d) {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
 
                 var nodeUpdate = nodeEnter.merge(node);
 
@@ -169,7 +169,7 @@
                 nodeExit.select('text')
                     .style('fill-opacity', 1e-6);
 
-                var link = svg.selectAll('path.link')
+                var link = g.selectAll('path.link')
                     .data(links, function(d) { return d.target.id; });
 
                 var linkEnter = link.enter().insert('path', "g")
