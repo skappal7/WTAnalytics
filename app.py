@@ -17,55 +17,52 @@ def clean_text(text, stop_words, exclude_words):
     words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
     return words
 
-def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
-    words_counter = Counter()
-
-    filtered_data = data
-    if sentiment_filter != 'All':
-        sentiment_value = 1 if sentiment_filter == 'Positive' else -1
-        filtered_data = data[data['sentiment'] == sentiment_value]
-
-    for _, row in filtered_data.iterrows():
-        words = clean_text(row['Review'], stop_words, exclude_words)
-        for word in words:
-            words_counter[word] += 1
-
-    tree = {"name": "root", "children": []}
-    for word, count in words_counter.items():
-        if min_occurrences <= count <= max_occurrences:
-            word_node = {
-                "name": word,
-                "size": count,
-                "sentiment": 0,
-                "label": "",
-                "category": "",
-                "children": []
-            }
-            for _, row in filtered_data.iterrows():
-                if word in clean_text(row['Review'], stop_words, exclude_words):
-                    word_node["sentiment"] = row['sentiment']
-                    word_node["label"] = row['Label']
-                    word_node["category"] = row['Category']
-                    break
-            tree["children"].append(word_node)
-
-    return tree
-
-def generate_word_tree_html(tree_data):
-    with open("word_tree_template.html", "r") as template_file:
-        html_template = template_file.read()
-
-    html_output = html_template.replace("var treeData = {};", f"var treeData = {json.dumps(tree_data)};")
-    return html_output
-
-def get_related_words(word, data, stop_words, exclude_words):
+def get_related_words(word, data, stop_words, exclude_words, max_related=5):
     related_words = Counter()
+    sentiment_sum = 0
+    reviews_count = 0
+    
     for _, row in data.iterrows():
         words = clean_text(row['Review'], stop_words, exclude_words)
         if word in words:
             related_words.update(words)
-    related_words.pop(word, None)
-    return [{"name": w, "size": c} for w, c in related_words.most_common(5)]
+            sentiment_sum += row['sentiment']
+            reviews_count += 1
+    
+    related_words.pop(word, None)  # Remove the word itself from related words
+    
+    avg_sentiment = sentiment_sum / reviews_count if reviews_count > 0 else 0
+    
+    return [
+        {
+            "name": w,
+            "size": c,
+            "sentiment": avg_sentiment,
+            "label": f"Related to '{word}'",
+            "category": "Related Word"
+        } for w, c in related_words.most_common(max_related)
+    ]
+
+def prepare_initial_tree(data, stop_words, exclude_words, min_occurrences=10):
+    words_counter = Counter()
+    
+    for _, row in data.iterrows():
+        words = clean_text(row['Review'], stop_words, exclude_words)
+        words_counter.update(words)
+    
+    root = {"name": "Reviews", "children": []}
+    for word, count in words_counter.most_common(10):  # Start with top 10 words
+        if count >= min_occurrences:
+            word_node = {
+                "name": word,
+                "size": count,
+                "sentiment": 0,  # You might want to calculate this
+                "label": "Top Word",
+                "category": "Initial Word"
+            }
+            root["children"].append(word_node)
+    
+    return root
 
 st.title("Word Tree Visualization")
 
@@ -75,13 +72,15 @@ if uploaded_file is not None:
 
     stop_words = set(stopwords.words('english'))
     exclude_words = st.sidebar.text_input("Words to Exclude (comma separated)").split(',')
-    sentiment_filter = st.sidebar.radio("Filter by Sentiment", ["All", "Positive", "Negative"])
-    min_occurrences = st.sidebar.slider("Minimum Word Occurrences", 1, 10, 1)
-    max_occurrences = st.sidebar.slider("Maximum Word Occurrences", 10, 100, 50)
+    
+    initial_tree = prepare_initial_tree(data, stop_words, exclude_words)
+    
+    st.session_state['tree_data'] = initial_tree
+    st.session_state['data'] = data
+    st.session_state['stop_words'] = stop_words
+    st.session_state['exclude_words'] = exclude_words
 
-    tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
-    html_output = generate_word_tree_html(tree_data)
-
+    # Display review counts
     total_reviews = len(data)
     positive_reviews = len(data[data['sentiment'] > 0])
     negative_reviews = len(data[data['sentiment'] < 0])
@@ -104,10 +103,22 @@ if uploaded_file is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    st.components.v1.html(html_output, height=600)
+    # Placeholder for D3.js visualization
+    st.components.v1.html("""
+    <div id="wordTree"></div>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script>
+        // D3.js code will go here
+    </script>
+    """, height=600)
 
-    if st.button('Get Related Words'):
-        word = st.text_input("Enter a word:")
-        if word:
-            related = get_related_words(word, data, stop_words, exclude_words)
-            st.write(related)
+    # Get Related Words functionality
+    st.subheader("Get Related Words")
+    word = st.text_input("Enter a word:")
+    if st.button('Get Related Words') and word:
+        related = get_related_words(word, data, stop_words, exclude_words)
+        st.write(related)
+
+    # Add this to your Streamlit app to handle AJAX requests
+    if st.button('Update Tree'):
+        st.write("Tree updated")  # This is a placeholder, actual updating will be done in JS
