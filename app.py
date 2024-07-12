@@ -34,16 +34,39 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
         for phrase in phrases:
             words_counter[phrase] += 1
 
+    def add_to_tree(tree, phrase, sentiment, label, category):
+        parts = phrase.split()
+        current_level = tree
+        for i, part in enumerate(parts):
+            # Check if part already exists in children
+            found = False
+            for child in current_level["children"]:
+                if child["name"] == part:
+                    current_level = child
+                    found = True
+                    break
+            if not found:
+                new_child = {"name": part, "children": []}
+                if i == len(parts) - 1:  # If it's the last part, add sentiment, label, category
+                    new_child["size"] = 1
+                    new_child["sentiment"] = sentiment
+                    new_child["label"] = label
+                    new_child["category"] = category
+                current_level["children"].append(new_child)
+                current_level = new_child
+
     tree = {"name": "All Reviews", "children": []}
     for phrase, count in words_counter.items():
         if min_occurrences <= count <= max_occurrences:
-            word_node = {"name": phrase, "size": count, "sentiment": 0, "children": []}
+            sentiment = 0
+            label = ""
+            category = ""
             for _, row in filtered_data.iterrows():
                 if phrase in clean_text(row['Review'], stop_words, exclude_words, n):
-                    word_node["sentiment"] = row['sentiment']
-                    word_node["label"] = row['Label']
-                    word_node["category"] = row['Category']
-            tree["children"].append(word_node)
+                    sentiment = row['sentiment']
+                    label = row['Label']
+                    category = row['Category']
+            add_to_tree(tree, phrase, sentiment, label, category)
 
     return tree
 
