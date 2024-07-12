@@ -4,24 +4,22 @@ import json
 import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from nltk.util import ngrams
 from collections import Counter
 import nltk
 
 nltk.download('stopwords')
-nltk.download('punkt')  # Ensure the punkt tokenizer is downloaded
+nltk.download('punkt')
 
 # Function to clean and process text
-def clean_text(text, stop_words, exclude_words, n):
+def clean_text(text, stop_words, exclude_words):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
     words = word_tokenize(text)
     words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
-    phrases = [' '.join(gram) for gram in ngrams(words, n)]
-    return phrases
+    return words
 
 # Function to prepare hierarchical data for D3.js
-def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences, n):
+def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
     words_counter = Counter()
 
     filtered_data = data
@@ -30,42 +28,33 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
         filtered_data = data[data['sentiment'] == sentiment_value]
 
     for _, row in filtered_data.iterrows():
-        phrases = clean_text(row['Review'], stop_words, exclude_words, n)
-        for phrase in phrases:
-            words_counter[phrase] += 1
-
-    def add_to_tree(tree, phrase, sentiment, label, category):
-        parts = phrase.split()
-        current_level = tree
-        for i, part in enumerate(parts):
-            found = False
-            for child in current_level["children"]:
-                if child["name"] == part:
-                    current_level = child
-                    found = True
-                    break
-            if not found:
-                new_child = {"name": part, "children": []}
-                if i == len(parts) - 1:  # If it's the last part, add sentiment, label, category
-                    new_child["size"] = 1
-                    new_child["sentiment"] = sentiment
-                    new_child["label"] = label
-                    new_child["category"] = category
-                current_level["children"].append(new_child)
-                current_level = new_child
+        words = clean_text(row['Review'], stop_words, exclude_words)
+        for word in words:
+            words_counter[word] += 1
 
     tree = {"name": "All Reviews", "children": []}
-    for phrase, count in words_counter.items():
-        if min_occurrences <= count <= max_occurrences:
-            sentiment = 0
-            label = ""
-            category = ""
-            for _, row in filtered_data.iterrows():
-                if phrase in clean_text(row['Review'], stop_words, exclude_words, n):
-                    sentiment = row['sentiment']
-                    label = row['Label']
-                    category = row['Category']
-            add_to_tree(tree, phrase, sentiment, label, category)
+    category_dict = {}
+
+    for _, row in filtered_data.iterrows():
+        category = row['Category']
+        label = row['Label']
+        words = clean_text(row['Review'], stop_words, exclude_words)
+
+        if category not in category_dict:
+            category_dict[category] = {"name": category, "children": []}
+            tree["children"].append(category_dict[category])
+
+        label_dict = next((item for item in category_dict[category]["children"] if item["name"] == label), None)
+        if not label_dict:
+            label_dict = {"name": label, "children": []}
+            category_dict[category]["children"].append(label_dict)
+
+        for word in words:
+            if min_occurrences <= words_counter[word] <= max_occurrences:
+                word_node = next((item for item in label_dict["children"] if item["name"] == word), None)
+                if not word_node:
+                    word_node = {"name": word, "size": words_counter[word], "sentiment": row['sentiment']}
+                    label_dict["children"].append(word_node)
 
     return tree
 
@@ -89,9 +78,8 @@ if uploaded_file is not None:
     sentiment_filter = st.sidebar.radio("Filter by Sentiment", ["All", "Positive", "Negative"])
     min_occurrences = st.sidebar.slider("Minimum Word Occurrences", 1, 10, 1)
     max_occurrences = st.sidebar.slider("Maximum Word Occurrences", 10, 100, 50)
-    n = st.sidebar.slider("N-grams (number of words in phrases)", 2, 3, 2)
 
-    tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences, n)
+    tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
     html_output = generate_word_tree_html(tree_data)
 
     # Display review counts
@@ -117,4 +105,4 @@ if uploaded_file is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    st.components.v1.html(html_output, height=800)
+    st.components.v1.html(html_output, height=600)
