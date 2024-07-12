@@ -8,9 +8,8 @@ from collections import Counter
 import nltk
 
 nltk.download('stopwords')
-nltk.download('punkt')  # Ensure the punkt tokenizer is downloaded
+nltk.download('punkt')
 
-# Function to clean and process text
 def clean_text(text, stop_words, exclude_words):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
@@ -18,7 +17,6 @@ def clean_text(text, stop_words, exclude_words):
     words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
     return words
 
-# Function to prepare hierarchical data for D3.js
 def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
     words_counter = Counter()
 
@@ -35,25 +33,40 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
     tree = {"name": "root", "children": []}
     for word, count in words_counter.items():
         if min_occurrences <= count <= max_occurrences:
-            word_node = {"name": word, "size": count, "sentiment": 0}
+            word_node = {
+                "name": word,
+                "size": count,
+                "sentiment": 0,
+                "label": "",
+                "category": "",
+                "children": []
+            }
             for _, row in filtered_data.iterrows():
                 if word in clean_text(row['Review'], stop_words, exclude_words):
                     word_node["sentiment"] = row['sentiment']
                     word_node["label"] = row['Label']
                     word_node["category"] = row['Category']
+                    break
             tree["children"].append(word_node)
 
     return tree
 
-# Function to generate the HTML for the word tree
 def generate_word_tree_html(tree_data):
     with open("word_tree_template.html", "r") as template_file:
         html_template = template_file.read()
 
-    html_output = html_template.replace("{data}", json.dumps(tree_data))
+    html_output = html_template.replace("var treeData = {};", f"var treeData = {json.dumps(tree_data)};")
     return html_output
 
-# Streamlit app
+def get_related_words(word, data, stop_words, exclude_words):
+    related_words = Counter()
+    for _, row in data.iterrows():
+        words = clean_text(row['Review'], stop_words, exclude_words)
+        if word in words:
+            related_words.update(words)
+    related_words.pop(word, None)
+    return [{"name": w, "size": c} for w, c in related_words.most_common(5)]
+
 st.title("Word Tree Visualization")
 
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -69,7 +82,6 @@ if uploaded_file is not None:
     tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
     html_output = generate_word_tree_html(tree_data)
 
-    # Display review counts
     total_reviews = len(data)
     positive_reviews = len(data[data['sentiment'] > 0])
     negative_reviews = len(data[data['sentiment'] < 0])
@@ -93,3 +105,9 @@ if uploaded_file is not None:
     """, unsafe_allow_html=True)
 
     st.components.v1.html(html_output, height=600)
+
+    if st.button('Get Related Words'):
+        word = st.text_input("Enter a word:")
+        if word:
+            related = get_related_words(word, data, stop_words, exclude_words)
+            st.write(related)
