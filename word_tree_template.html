@@ -12,6 +12,7 @@
         }
         .node text {
             font: 12px Arial, sans-serif;
+            fill: #333;
         }
         .link {
             fill: none;
@@ -38,15 +39,13 @@
         var treeData = {};  // This will be replaced with actual data
 
         function initializeWordTree(treeData) {
-            var margin = {top: 20, right: 120, bottom: 20, left: 120},
+            var margin = {top: 40, right: 120, bottom: 40, left: 120},
                 width = 960 - margin.right - margin.left,
-                height = 500 - margin.top - margin.bottom;
+                height = 800 - margin.top - margin.bottom;
 
             var i = 0,
                 duration = 750,
                 root;
-
-            var treemap = d3.tree().size([height, width]);
 
             var svg = d3.select("#wordTree").append("svg")
                 .attr("width", width + margin.right + margin.left)
@@ -58,22 +57,32 @@
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            root = d3.hierarchy(treeData, function(d) { return d.children; });
+            root = d3.hierarchy(treeData);
             root.x0 = height / 2;
             root.y0 = 0;
 
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d._children.forEach(collapse);
+                    d.children = null;
+                }
+            }
+
+            root.children.forEach(collapse);
             update(root);
 
             function update(source) {
-                var treeData = treemap(root);
+                var treeLayout = d3.tree().size([height, width]);
+                treeLayout(root);
 
-                var nodes = treeData.descendants(),
-                    links = treeData.descendants().slice(1);
+                var nodes = root.descendants(),
+                    links = root.links();
 
-                nodes.forEach(function(d){ d.y = d.depth * 180});
+                nodes.forEach(function(d) { d.y = d.depth * 180 });
 
                 var node = svg.selectAll('g.node')
-                    .data(nodes, function(d) {return d.id || (d.id = ++i); });
+                    .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
                 var nodeEnter = node.enter().append('g')
                     .attr('class', 'node')
@@ -83,10 +92,6 @@
                     .on('click', click);
 
                 nodeEnter.append('rect')
-                    .attr('width', function(d) {
-                        return Math.max(d.data.name.length * 8, 30);
-                    })
-                    .attr('height', 25)
                     .attr('rx', 5)
                     .attr('ry', 5)
                     .style("fill", function(d) {
@@ -95,11 +100,9 @@
 
                 nodeEnter.append('text')
                     .attr("dy", "0.35em")
-                    .attr("x", function(d) {
-                        return Math.max(d.data.name.length * 4, 15);
-                    })
                     .attr("text-anchor", "middle")
-                    .text(function(d) { return d.data.name; });
+                    .text(function(d) { return d.data.name; })
+                    .style("fill-opacity", 1e-6);
 
                 nodeEnter.on("mouseover", function(d) {
                     tooltip.transition()
@@ -119,44 +122,39 @@
 
                 nodeUpdate.transition()
                     .duration(duration)
-                    .attr("transform", function(d) {
-                        return "translate(" + d.y + "," + d.x + ")";
-                    });
+                    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
                 nodeUpdate.select('rect')
-                    .attr('width', function(d) {
-                        return Math.max(d.data.name.length * 8, 30);
-                    })
+                    .attr('width', function(d) { return d.data.name.length * 8 + 20; })
                     .attr('height', 25)
-                    .style("fill", function(d) {
-                        return d.data.sentiment > 0 ? "#a3d9a5" : (d.data.sentiment < 0 ? "#f7a7a6" : "#f0f0f0");
-                    })
-                    .attr('cursor', 'pointer');
+                    .attr('x', function(d) { return -(d.data.name.length * 4 + 10); })
+                    .attr('y', -12.5);
+
+                nodeUpdate.select('text')
+                    .style("fill-opacity", 1);
 
                 var nodeExit = node.exit().transition()
                     .duration(duration)
-                    .attr("transform", function(d) {
-                        return "translate(" + source.y + "," + source.x + ")";
-                    })
+                    .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
                     .remove();
 
                 nodeExit.select('rect')
-                    .attr('width', function(d) {
-                        return Math.max(d.data.name.length * 8, 30);
-                    })
-                    .attr('height', 25);
+                    .attr('width', 0)
+                    .attr('height', 0)
+                    .attr('x', 0)
+                    .attr('y', 0);
 
                 nodeExit.select('text')
                     .style('fill-opacity', 1e-6);
 
                 var link = svg.selectAll('path.link')
-                    .data(links, function(d) { return d.id; });
+                    .data(links, function(d) { return d.target.id; });
 
                 var linkEnter = link.enter().insert('path', "g")
                     .attr("class", "link")
                     .attr('d', function(d){
-                        var o = {x: source.x0, y: source.y0}
-                        return diagonal(o, o)
+                        var o = {x: source.x0, y: source.y0};
+                        return diagonal(o, o);
                     });
 
                 var linkUpdate = linkEnter.merge(link);
@@ -168,8 +166,8 @@
                 var linkExit = link.exit().transition()
                     .duration(duration)
                     .attr('d', function(d) {
-                        var o = {x: source.x, y: source.y}
-                        return diagonal(o, o)
+                        var o = {x: source.x, y: source.y};
+                        return diagonal(o, o);
                     })
                     .remove();
 
@@ -179,43 +177,22 @@
                 });
 
                 function diagonal(s, d) {
-                    path = `M ${s.y} ${s.x}
+                    return `M ${s.y} ${s.x}
                             C ${(s.y + d.y) / 2} ${s.x},
                               ${(s.y + d.y) / 2} ${d.x},
-                              ${d.y} ${d.x}`
-                    return path
+                              ${d.y} ${d.x}`;
                 }
 
                 function click(d) {
                     if (d.children) {
                         d._children = d.children;
                         d.children = null;
-                    } else if (d._children) {
+                    } else {
                         d.children = d._children;
                         d._children = null;
-                    } else {
-                        fetchChildNodes(d).then(() => {
-                            d.children = d._children;
-                            d._children = null;
-                            update(d);
-                        });
                     }
                     update(d);
                 }
-            }
-
-            function fetchChildNodes(d) {
-                return new Promise((resolve) => {
-                    // In a real application, this would make an API call to your Streamlit app
-                    // For now, we'll simulate it with a timeout
-                    setTimeout(() => {
-                        d._children = [
-                            {name: "Child1", sentiment: 1, size: 10, label: "Label1", category: "Category1"},
-                            {name: "Child2", sentiment: -1, size: 8, label: "Label2", category: "Category2"}
-                        ];
-                        resolve();
-                    }, 500);
-                });
             }
         }
 
