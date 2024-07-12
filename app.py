@@ -32,7 +32,7 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
         for word in words:
             words_counter[word] += 1
 
-    tree = {"name": "root", "children": []}
+    tree = {"name": "All Reviews", "children": []}
     for word, count in words_counter.items():
         if min_occurrences <= count <= max_occurrences:
             word_node = {"name": word, "size": count, "sentiment": 0}
@@ -92,4 +92,4 @@ if uploaded_file is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    st.components.v1.html(html_output, height=600)
+    st.components.v1.html(html_output, height=800)
