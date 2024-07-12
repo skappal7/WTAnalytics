@@ -4,6 +4,7 @@ import json
 import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.util import ngrams
 from collections import Counter
 import nltk
 
@@ -11,15 +12,16 @@ nltk.download('stopwords')
 nltk.download('punkt')  # Ensure the punkt tokenizer is downloaded
 
 # Function to clean and process text
-def clean_text(text, stop_words, exclude_words):
+def clean_text(text, stop_words, exclude_words, n):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
     words = word_tokenize(text)
     words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
-    return words
+    phrases = [' '.join(gram) for gram in ngrams(words, n)]
+    return phrases
 
 # Function to prepare hierarchical data for D3.js
-def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
+def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences, n):
     words_counter = Counter()
 
     filtered_data = data
@@ -28,16 +30,16 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
         filtered_data = data[data['sentiment'] == sentiment_value]
 
     for _, row in filtered_data.iterrows():
-        words = clean_text(row['Review'], stop_words, exclude_words)
-        for word in words:
-            words_counter[word] += 1
+        phrases = clean_text(row['Review'], stop_words, exclude_words, n)
+        for phrase in phrases:
+            words_counter[phrase] += 1
 
     tree = {"name": "All Reviews", "children": []}
-    for word, count in words_counter.items():
+    for phrase, count in words_counter.items():
         if min_occurrences <= count <= max_occurrences:
-            word_node = {"name": word, "size": count, "sentiment": 0}
+            word_node = {"name": phrase, "size": count, "sentiment": 0, "children": []}
             for _, row in filtered_data.iterrows():
-                if word in clean_text(row['Review'], stop_words, exclude_words):
+                if phrase in clean_text(row['Review'], stop_words, exclude_words, n):
                     word_node["sentiment"] = row['sentiment']
                     word_node["label"] = row['Label']
                     word_node["category"] = row['Category']
@@ -65,8 +67,9 @@ if uploaded_file is not None:
     sentiment_filter = st.sidebar.radio("Filter by Sentiment", ["All", "Positive", "Negative"])
     min_occurrences = st.sidebar.slider("Minimum Word Occurrences", 1, 10, 1)
     max_occurrences = st.sidebar.slider("Maximum Word Occurrences", 10, 100, 50)
+    n = st.sidebar.slider("N-grams (number of words in phrases)", 2, 3, 2)
 
-    tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
+    tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences, n)
     html_output = generate_word_tree_html(tree_data)
 
     # Display review counts
