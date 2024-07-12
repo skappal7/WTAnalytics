@@ -7,17 +7,27 @@
             cursor: pointer;
         }
         .node rect {
-            stroke: #3182bd;
-            stroke-width: 1.5px;
+            stroke: #555;
+            stroke-width: 1px;
         }
         .node text {
-            font: 10px sans-serif;
-            pointer-events: none;
+            font: 12px Arial, sans-serif;
         }
         .link {
             fill: none;
-            stroke: #ccc;
+            stroke: #555;
+            stroke-opacity: 0.4;
             stroke-width: 1.5px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            font: 12px sans-serif;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -25,7 +35,7 @@
     <div id="wordTree"></div>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>
-        var treeData = {data}; // Placeholder for dynamic data
+        var treeData = {};  // This will be replaced with actual data
 
         function initializeWordTree(treeData) {
             var margin = {top: 20, right: 120, bottom: 20, left: 120},
@@ -44,6 +54,10 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            var tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
             root = d3.hierarchy(treeData, function(d) { return d.children; });
             root.x0 = height / 2;
             root.y0 = 0;
@@ -51,7 +65,6 @@
             update(root);
 
             function update(source) {
-
                 var treeData = treemap(root);
 
                 var nodes = treeData.descendants(),
@@ -70,21 +83,37 @@
                     .on('click', click);
 
                 nodeEnter.append('rect')
-                    .attr('width', 100)
-                    .attr('height', 20)
-                    .attr('rx', 10)
-                    .attr('ry', 10)
+                    .attr('width', function(d) {
+                        return Math.max(d.data.name.length * 8, 30);
+                    })
+                    .attr('height', 25)
+                    .attr('rx', 5)
+                    .attr('ry', 5)
                     .style("fill", function(d) {
-                        return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
+                        return d.data.sentiment > 0 ? "#a3d9a5" : (d.data.sentiment < 0 ? "#f7a7a6" : "#f0f0f0");
                     });
 
                 nodeEnter.append('text')
-                    .attr("dy", ".35em")
+                    .attr("dy", "0.35em")
                     .attr("x", function(d) {
-                        return d.children || d._children ? -13 : 13;
+                        return Math.max(d.data.name.length * 4, 15);
                     })
                     .attr("text-anchor", "middle")
                     .text(function(d) { return d.data.name; });
+
+                nodeEnter.on("mouseover", function(d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html("Label: " + d.data.label + "<br/>Category: " + d.data.category)
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
 
                 var nodeUpdate = nodeEnter.merge(node);
 
@@ -95,10 +124,12 @@
                     });
 
                 nodeUpdate.select('rect')
-                    .attr('width', 100)
-                    .attr('height', 20)
+                    .attr('width', function(d) {
+                        return Math.max(d.data.name.length * 8, 30);
+                    })
+                    .attr('height', 25)
                     .style("fill", function(d) {
-                        return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
+                        return d.data.sentiment > 0 ? "#a3d9a5" : (d.data.sentiment < 0 ? "#f7a7a6" : "#f0f0f0");
                     })
                     .attr('cursor', 'pointer');
 
@@ -110,8 +141,10 @@
                     .remove();
 
                 nodeExit.select('rect')
-                    .attr('width', 100)
-                    .attr('height', 20);
+                    .attr('width', function(d) {
+                        return Math.max(d.data.name.length * 8, 30);
+                    })
+                    .attr('height', 25);
 
                 nodeExit.select('text')
                     .style('fill-opacity', 1e-6);
@@ -157,12 +190,32 @@
                     if (d.children) {
                         d._children = d.children;
                         d.children = null;
-                    } else {
+                    } else if (d._children) {
                         d.children = d._children;
                         d._children = null;
+                    } else {
+                        fetchChildNodes(d).then(() => {
+                            d.children = d._children;
+                            d._children = null;
+                            update(d);
+                        });
                     }
                     update(d);
                 }
+            }
+
+            function fetchChildNodes(d) {
+                return new Promise((resolve) => {
+                    // In a real application, this would make an API call to your Streamlit app
+                    // For now, we'll simulate it with a timeout
+                    setTimeout(() => {
+                        d._children = [
+                            {name: "Child1", sentiment: 1, size: 10, label: "Label1", category: "Category1"},
+                            {name: "Child2", sentiment: -1, size: 8, label: "Label2", category: "Category2"}
+                        ];
+                        resolve();
+                    }, 500);
+                });
             }
         }
 
