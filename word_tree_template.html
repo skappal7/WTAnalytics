@@ -9,6 +9,7 @@
         .node circle {
             stroke: #555;
             stroke-width: 1.5px;
+            fill: white;
         }
         .node text {
             font: 12px Arial, sans-serif;
@@ -94,8 +95,7 @@
                     .attr('r', 10)
                     .style("stroke", function(d) {
                         return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
-                    })
-                    .style("fill", "white");
+                    });
 
                 nodeEnter.append('text')
                     .attr("dy", ".35em")
