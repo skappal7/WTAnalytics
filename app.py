@@ -38,7 +38,6 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
         parts = phrase.split()
         current_level = tree
         for i, part in enumerate(parts):
-            # Check if part already exists in children
             found = False
             for child in current_level["children"]:
                 if child["name"] == part:
