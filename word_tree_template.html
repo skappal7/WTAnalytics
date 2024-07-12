@@ -37,29 +37,7 @@
     <div id="wordTree"></div>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>
-        // This function will be used to fetch related words
-        function fetchRelatedWords(word) {
-            // This is a placeholder. In a real application, this would make an API call
-            // to your backend to get related words for the given word.
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    resolve([
-                        { name: word + "_child1", sentiment: Math.random() - 0.5 },
-                        { name: word + "_child2", sentiment: Math.random() - 0.5 },
-                        { name: word + "_child3", sentiment: Math.random() - 0.5 }
-                    ]);
-                }, 500);
-            });
-        }
-
-        var treeData = {
-            name: "Root",
-            children: [
-                { name: "Word1", sentiment: 0.5 },
-                { name: "Word2", sentiment: -0.3 },
-                { name: "Word3", sentiment: 0.1 }
-            ]
-        };
+        var treeData = {data};  // This will be replaced with actual data
 
         function initializeWordTree(treeData) {
             var margin = {top: 20, right: 120, bottom: 20, left: 120},
@@ -84,6 +62,14 @@
             root.x0 = height / 2;
             root.y0 = 0;
 
+            function collapse(d) {
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                }
+            }
+
+            root.children.forEach(collapse);
             update(root);
 
             function update(source) {
@@ -106,7 +92,7 @@
                     .on('click', click);
 
                 nodeEnter.append('circle')
-                    .attr('r', 1e-6)
+                    .attr('r', 10)
                     .style("stroke", function(d) {
                         return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
                     });
@@ -122,7 +108,7 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    tooltip.html("Word: " + d.data.name + "<br/>Sentiment: " + d.data.sentiment.toFixed(2))
+                    tooltip.html("Label: " + d.data.label + "<br/>Category: " + d.data.category)
                         .style("left", (d3.event.pageX) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
@@ -195,22 +181,13 @@
                     return path;
                 }
 
-                async function click(d) {
+                function click(d) {
                     if (d.children) {
                         d._children = d.children;
                         d.children = null;
                     } else {
-                        if (d._children) {
-                            d.children = d._children;
-                            d._children = null;
-                        } else {
-                            // Fetch related words
-                            let relatedWords = await fetchRelatedWords(d.data.name);
-                            d.children = relatedWords.map(word => ({
-                                data: word,
-                                children: null
-                            }));
-                        }
+                        d.children = d._children;
+                        d._children = null;
                     }
                     update(d);
                 }
