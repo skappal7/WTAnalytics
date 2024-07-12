@@ -36,7 +36,7 @@
     <div id="wordTree"></div>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>
-        var treeData = {};  // This will be replaced with actual data
+        var treeData = {data};  // This will be replaced with actual data
 
         function initializeWordTree(treeData) {
             var margin = {top: 40, right: 120, bottom: 40, left: 120},
@@ -93,8 +93,12 @@
                 nodeEnter.append('rect')
                     .attr('rx', 5)
                     .attr('ry', 5)
+                    .attr('width', function(d) { return d.data.name.length * 8 + 20; })
+                    .attr('height', 25)
+                    .attr('x', function(d) { return -(d.data.name.length * 4 + 10); })
+                    .attr('y', -12.5)
                     .style("fill", function(d) {
-                        return d.data.sentiment > 0 ? "#a3d9a5" : (d.data.sentiment < 0 ? "#f7a7a6" : "#f0f0f0");
+                        return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
                     });
 
                 nodeEnter.append('text')
@@ -126,8 +130,10 @@
                 nodeUpdate.select('rect')
                     .attr('width', function(d) { return d.data.name.length * 8 + 20; })
                     .attr('height', 25)
-                    .attr('x', function(d) { return -(d.data.name.length * 4 + 10); })
-                    .attr('y', -12.5);
+                    .style("fill", function(d) {
+                        return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
+                    })
+                    .attr('cursor', 'pointer');
 
                 nodeUpdate.select('text')
                     .style("fill-opacity", 1);
