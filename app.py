@@ -8,7 +8,7 @@ from collections import Counter
 import nltk
 
 nltk.download('stopwords')
-nltk.download('punkt')
+nltk.download('punkt')  # Ensure the punkt tokenizer is downloaded
 
 # Function to clean and process text
 def clean_text(text, stop_words, exclude_words):
@@ -33,28 +33,33 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
             words_counter[word] += 1
 
     tree = {"name": "All Reviews", "children": []}
-    label_dict = {}
+    labels = filtered_data['Label'].unique()
 
-    for _, row in filtered_data.iterrows():
-        label = row['Label']
-        category = row['Category']
-        words = clean_text(row['Review'], stop_words, exclude_words)
+    for label in labels:
+        label_node = {"name": label, "children": []}
+        label_data = filtered_data[filtered_data['Label'] == label]
+        categories = label_data['Category'].unique()
 
-        if label not in label_dict:
-            label_dict[label] = {"name": label, "children": [], "sentiment": row['sentiment']}
-            tree["children"].append(label_dict[label])
+        for category in categories:
+            category_node = {"name": category, "children": []}
+            category_data = label_data[label_data['Category'] == category]
 
-        category_dict = next((item for item in label_dict[label]["children"] if item["name"] == category), None)
-        if not category_dict:
-            category_dict = {"name": category, "children": [], "sentiment": row['sentiment']}
-            label_dict[label]["children"].append(category_dict)
+            words_counter = Counter()
+            for _, row in category_data.iterrows():
+                words = clean_text(row['Review'], stop_words, exclude_words)
+                for word in words:
+                    words_counter[word] += 1
 
-        for word in words:
-            if min_occurrences <= words_counter[word] <= max_occurrences:
-                word_node = next((item for item in category_dict["children"] if item["name"] == word), None)
-                if not word_node:
-                    word_node = {"name": word, "size": words_counter[word], "sentiment": row['sentiment']}
-                    category_dict["children"].append(word_node)
+            for word, count in words_counter.items():
+                if min_occurrences <= count <= max_occurrences:
+                    word_node = {"name": word, "size": count, "sentiment": 0}
+                    for _, row in category_data.iterrows():
+                        if word in clean_text(row['Review'], stop_words, exclude_words):
+                            word_node["sentiment"] = row['sentiment']
+                    category_node["children"].append(word_node)
+
+            label_node["children"].append(category_node)
+        tree["children"].append(label_node)
 
     return tree
 
@@ -105,4 +110,4 @@ if uploaded_file is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    st.components.v1.html(html_output, height=800)
+    st.components.v1.html(html_output, height=600)
