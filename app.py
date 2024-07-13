@@ -33,28 +33,28 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
             words_counter[word] += 1
 
     tree = {"name": "All Reviews", "children": []}
-    label_dict = {}
+    category_dict = {}
 
     for _, row in filtered_data.iterrows():
-        label = row['Label']
         category = row['Category']
+        label = row['Label']
         words = clean_text(row['Review'], stop_words, exclude_words)
 
-        if label not in label_dict:
-            label_dict[label] = {"name": label, "children": [], "sentiment": row['sentiment']}
-            tree["children"].append(label_dict[label])
+        if category not in category_dict:
+            category_dict[category] = {"name": category, "children": []}
+            tree["children"].append(category_dict[category])
 
-        category_dict = next((item for item in label_dict[label]["children"] if item["name"] == category), None)
-        if not category_dict:
-            category_dict = {"name": category, "children": [], "sentiment": row['sentiment']}
-            label_dict[label]["children"].append(category_dict)
+        label_dict = next((item for item in category_dict[category]["children"] if item["name"] == label), None)
+        if not label_dict:
+            label_dict = {"name": label, "children": []}
+            category_dict[category]["children"].append(label_dict)
 
         for word in words:
             if min_occurrences <= words_counter[word] <= max_occurrences:
-                word_node = next((item for item in category_dict["children"] if item["name"] == word), None)
+                word_node = next((item for item in label_dict["children"] if item["name"] == word), None)
                 if not word_node:
                     word_node = {"name": word, "size": words_counter[word], "sentiment": row['sentiment']}
-                    category_dict["children"].append(word_node)
+                    label_dict["children"].append(word_node)
 
     return tree
 
@@ -105,4 +105,4 @@ if uploaded_file is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    st.components.v1.html(html_output, height=800)
+    st.components.v1.html(html_output, height=600)
