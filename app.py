@@ -6,6 +6,17 @@ import streamlit.components.v1 as components
 # Function to convert CSV data to hierarchical JSON
 def csv_to_json(data):
     tree = {"name": "All Reviews", "children": []}
+    
+    # Ensure columns are stripped of any leading/trailing spaces
+    data.columns = data.columns.str.strip()
+    
+    # Check if required columns exist
+    required_columns = ["review", "label", "category", "sentiment_score", "sentiment_type"]
+    for col in required_columns:
+        if col not in data.columns:
+            st.error(f"Missing required column: {col}")
+            return None
+    
     labels = data["label"].unique()
     
     for label in labels:
@@ -54,16 +65,17 @@ if uploaded_file:
     # Convert the data to hierarchical JSON format
     json_data = csv_to_json(data)
     
-    # Create the HTML template to embed the D3.js visualization
-    html_template = open("d3_visualization.html").read()
-    
-    # Display the HTML template using Streamlit components
-    components.html(html_template, height=800)
-    
-    # Send the data to the HTML file
-    st.markdown(f"""
-    <script>
-        const data = {json.dumps(json_data)};
-        window.parent.postMessage({{ type: "draw", data: data }}, "*");
-    </script>
-    """, unsafe_allow_html=True)
+    if json_data:
+        # Create the HTML template to embed the D3.js visualization
+        html_template = open("d3_visualization.html").read()
+        
+        # Display the HTML template using Streamlit components
+        components.html(html_template, height=800)
+        
+        # Send the data to the HTML file
+        st.markdown(f"""
+        <script>
+            const data = {json.dumps(json_data)};
+            window.parent.postMessage({{ type: "draw", data: data }}, "*");
+        </script>
+        """, unsafe_allow_html=True)
