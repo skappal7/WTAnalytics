@@ -8,9 +8,8 @@ from collections import Counter
 import nltk
 
 nltk.download('stopwords')
-nltk.download('punkt')  # Ensure the punkt tokenizer is downloaded
+nltk.download('punkt')
 
-# Function to clean and process text
 def clean_text(text, stop_words, exclude_words):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
@@ -18,7 +17,6 @@ def clean_text(text, stop_words, exclude_words):
     words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
     return words
 
-# Function to prepare hierarchical data for D3.js
 def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
     words_counter = Counter()
 
@@ -63,7 +61,6 @@ def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, mi
 
     return tree
 
-# Function to generate the HTML for the word tree
 def generate_word_tree_html(tree_data):
     with open("word_tree_template.html", "r") as template_file:
         html_template = template_file.read()
@@ -71,7 +68,6 @@ def generate_word_tree_html(tree_data):
     html_output = html_template.replace("{data}", json.dumps(tree_data))
     return html_output
 
-# Streamlit app
 st.title("Word Tree Visualization")
 
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -87,7 +83,6 @@ if uploaded_file is not None:
     tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
     html_output = generate_word_tree_html(tree_data)
 
-    # Display review counts
     total_reviews = len(data)
     positive_reviews = len(data[data['sentiment'] > 0])
     negative_reviews = len(data[data['sentiment'] < 0])
