@@ -31,30 +31,10 @@
             border-radius: 4px;
             pointer-events: none;
         }
-        .zoom-controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .zoom-controls button {
-            margin: 2px;
-            padding: 5px;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
     <div id="wordTree"></div>
-    <div class="zoom-controls">
-        <button id="zoom_in">Zoom In</button>
-        <button id="zoom_out">Zoom Out</button>
-        <button id="reset">Reset</button>
-    </div>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>
         var treeData = {data};  // This will be replaced with actual data
@@ -68,16 +48,10 @@
                 duration = 750,
                 root;
 
-            var zoom = d3.zoom().on("zoom", function (event) {
-                g.attr("transform", event.transform);
-            });
-
             var svg = d3.select("#wordTree").append("svg")
                 .attr("width", width + margin.right + margin.left)
                 .attr("height", height + margin.top + margin.bottom)
-                .call(zoom);
-
-            var g = svg.append("g")
+                .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             var tooltip = d3.select("body").append("div")
@@ -107,7 +81,7 @@
 
                 nodes.forEach(function(d) { d.y = d.depth * 180 });
 
-                var node = g.selectAll('g.node')
+                var node = svg.selectAll('g.node')
                     .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
                 var nodeEnter = node.enter().append('g')
@@ -115,20 +89,7 @@
                     .attr("transform", function(d) {
                         return "translate(" + source.y0 + "," + source.x0 + ")";
                     })
-                    .on('click', function(event, d) { click(event, d); })
-                    .on("mouseover", function(event, d) {
-                        tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                        tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
-                            .style("left", (event.pageX) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
-                    .on("mouseout", function(d) {
-                        tooltip.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                    });
+                    .on('click', click);
 
                 nodeEnter.append('circle')
                     .attr('r', 10)
@@ -142,6 +103,20 @@
                     .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
                     .text(function(d) { return d.data.name; })
                     .style("fill-opacity", 1e-6);
+
+                nodeEnter.on("mouseover", function(d) {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
 
                 var nodeUpdate = nodeEnter.merge(node);
 
@@ -169,7 +144,7 @@
                 nodeExit.select('text')
                     .style('fill-opacity', 1e-6);
 
-                var link = g.selectAll('path.link')
+                var link = svg.selectAll('path.link')
                     .data(links, function(d) { return d.target.id; });
 
                 var linkEnter = link.enter().insert('path', "g")
@@ -199,13 +174,15 @@
                 });
 
                 function diagonal(s, d) {
-                    return `M ${s.y} ${s.x}
-                            C ${(s.y + d.y) / 2} ${s.x},
-                              ${(s.y + d.y) / 2} ${d.x},
-                              ${d.y} ${d.x}`;
+                    if (!s || !d) return;
+                    var path = `M ${s.y} ${s.x}
+                                C ${(s.y + d.y) / 2} ${s.x},
+                                  ${(s.y + d.y) / 2} ${d.x},
+                                  ${d.y} ${d.x}`;
+                    return path;
                 }
 
-                function click(event, d) {
+                function click(d) {
                     if (d.children) {
                         d._children = d.children;
                         d.children = null;
@@ -222,19 +199,6 @@
                 var phrases = children.map(child => child.name).slice(0, 10);
                 return phrases.join('<br/>');
             }
-
-            // Zoom controls
-            d3.select("#zoom_in").on("click", function() {
-                svg.transition().call(zoom.scaleBy, 1.2);
-            });
-
-            d3.select("#zoom_out").on("click", function() {
-                svg.transition().call(zoom.scaleBy, 0.8);
-            });
-
-            d3.select("#reset").on("click", function() {
-                svg.transition().call(zoom.transform, d3.zoomIdentity);
-            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
