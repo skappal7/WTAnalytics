@@ -1,101 +1,154 @@
 import streamlit as st
 import pandas as pd
 import json
-import string
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from collections import Counter
-import nltk
+import os
 
-nltk.download('stopwords')
-nltk.download('punkt')
+# Set up the Streamlit app structure
+st.title("Sentiment Analysis Visualization with D3.js")
 
-def clean_text(text, stop_words, exclude_words):
-    text = text.lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))
-    words = word_tokenize(text)
-    words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
-    return words
+# File upload component
+uploaded_file = st.file_uploader("Upload your sentiment CSV file", type="csv")
 
-def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
-    filtered_data = data
-    if sentiment_filter != 'All':
-        sentiment_value = 1 if sentiment_filter == 'Positive' else -1
-        filtered_data = data[data['sentiment'] == sentiment_value]
-
-    tree = {"name": "All Reviews", "children": []}
-    labels = filtered_data['Label'].unique()
-
-    for label in labels:
-        label_node = {"name": label, "children": []}
-        label_data = filtered_data[filtered_data['Label'] == label]
-        categories = label_data['Category'].unique()
-
-        for category in categories:
-            category_node = {"name": category, "children": []}
-            category_data = label_data[label_data['Category'] == category]
-
-            words_counter = Counter()
-            for _, row in category_data.iterrows():
-                words = clean_text(row['Review'], stop_words, exclude_words)
-                for word in words:
-                    words_counter[word] += 1
-
-            for word, count in words_counter.items():
-                if min_occurrences <= count <= max_occurrences:
-                    word_node = {"name": word, "size": count, "sentiment": 0}
-                    for _, row in category_data.iterrows():
-                        if word in clean_text(row['Review'], stop_words, exclude_words):
-                            word_node["sentiment"] = row['sentiment']
-                    category_node["children"].append(word_node)
-
-            label_node["children"].append(category_node)
-        tree["children"].append(label_node)
-
-    return tree
-
-def generate_word_tree_html(tree_data):
-    with open("word_tree_template.html", "r") as template_file:
-        html_template = template_file.read()
-
-    html_output = html_template.replace("{data}", json.dumps(tree_data))
-    return html_output
-
-st.title("Word Tree Visualization")
-
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-if uploaded_file is not None:
+if uploaded_file:
+    # Read the CSV file
     data = pd.read_csv(uploaded_file)
-
-    stop_words = set(stopwords.words('english'))
-    exclude_words = st.sidebar.text_input("Words to Exclude (comma separated)").split(',')
-    sentiment_filter = st.sidebar.radio("Filter by Sentiment", ["All", "Positive", "Negative"])
-    min_occurrences = st.sidebar.slider("Minimum Word Occurrences", 1, 10, 1)
-    max_occurrences = st.sidebar.slider("Maximum Word Occurrences", 10, 100, 50)
-
-    tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
-    html_output = generate_word_tree_html(tree_data)
-
-    total_reviews = len(data)
-    positive_reviews = len(data[data['sentiment'] > 0])
-    negative_reviews = len(data[data['sentiment'] < 0])
-    neutral_reviews = len(data[data['sentiment'] == 0])
     
-    st.markdown(f"""
-    <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-            <strong>Total Reviews</strong><br>{total_reviews}
-        </div>
-        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-            <strong>Positive Reviews</strong><br>{positive_reviews}
-        </div>
-        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-            <strong>Negative Reviews</strong><br>{negative_reviews}
-        </div>
-        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
-            <strong>Neutral Reviews</strong><br>{neutral_reviews}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Display the uploaded data
+    st.write("Uploaded Data")
+    st.dataframe(data)
+    
+    # Save the data to a JSON file to be used by D3.js
+    json_data = data.to_json(orient='records')
+    with open('data.json', 'w') as f:
+        f.write(json_data)
+    
+    # HTML template to embed the D3.js visualization
+    html_template = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>D3.js Visualization</title>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <style>
+            .bar {{
+                fill: steelblue;
+            }}
+            .bar:hover {{
+                fill: orange;
+            }}
+            .axis-label {{
+                font: 12px sans-serif;
+            }}
+            .dendrogram-node circle {{
+                fill: #999;
+            }}
+            .dendrogram-node text {{
+                font: 10px sans-serif;
+            }}
+            .dendrogram-link {{
+                fill: none;
+                stroke: #555;
+                stroke-width: 1.5px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="dendrogram"></div>
+        <div id="barchart"></div>
+        <script>
+            // Load the data
+            d3.json('data.json').then(data => {{
+                // Process the data for the dendrogram
+                const root = d3.stratify()
+                    .id(d => d.category)
+                    .parentId(d => d.label)(data)
+                    .sum(d => d.value)
+                    .sort((a, b) => b.height - a.height || b.value - a.value);
+    
+                // Create the dendrogram
+                const dendrogram = d3.tree().size([800, 400]);
+                const svgDendrogram = d3.select("#dendrogram").append("svg")
+                    .attr("width", 960)
+                    .attr("height", 500)
+                    .append("g")
+                    .attr("transform", "translate(40,0)");
+    
+                const link = svgDendrogram.selectAll(".dendrogram-link")
+                    .data(dendrogram(root).links())
+                    .enter().append("path")
+                    .attr("class", "dendrogram-link")
+                    .attr("d", d3.linkHorizontal()
+                        .x(d => d.y)
+                        .y(d => d.x));
+    
+                const node = svgDendrogram.selectAll(".dendrogram-node")
+                    .data(root.descendants())
+                    .enter().append("g")
+                    .attr("class", "dendrogram-node")
+                    .attr("transform", d => `translate(${d.y},${d.x})`);
+    
+                node.append("circle")
+                    .attr("r", 2.5);
+    
+                node.append("text")
+                    .attr("dy", 3)
+                    .attr("x", d => d.children ? -8 : 8)
+                    .style("text-anchor", d => d.children ? "end" : "start")
+                    .text(d => d.data.name);
+    
+                // Process the data for the bar chart
+                const sentimentColors = {{
+                    'Negative': 'lightcoral',
+                    'Positive': 'lightgreen',
+                    'Neutral': 'lightgrey'
+                }};
+    
+                const groupedData = d3.groups(data, d => d.label, d => d.category, d => d.sentiment);
+    
+                // Create the bar chart
+                const margin = {{ top: 20, right: 30, bottom: 40, left: 90 }};
+                const width = 960 - margin.left - margin.right;
+                const height = 500 - margin.top - margin.bottom;
+    
+                const svgBarChart = d3.select("#barchart").append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", `translate(${margin.left},${margin.top})`);
+    
+                const x = d3.scaleLinear()
+                    .range([0, width])
+                    .domain([0, d3.max(groupedData, d => d3.max(d[1], d => d3.max(d[1], d => d3.max(d[1], d => d.value))))]);
+    
+                const y = d3.scaleBand()
+                    .range([height, 0])
+                    .padding(0.1)
+                    .domain(groupedData.map(d => d[0]));
+    
+                svgBarChart.append("g")
+                    .call(d3.axisLeft(y).tickSize(0))
+                    .selectAll("text")
+                    .attr("class", "axis-label");
+    
+                svgBarChart.selectAll(".bar")
+                    .data(groupedData)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", 0)
+                    .attr("y", d => y(d[0]))
+                    .attr("width", d => x(d3.max(d[1], d => d3.max(d[1], d => d3.max(d[1], d => d.value)))))
+                    .attr("height", y.bandwidth())
+                    .attr("fill", d => sentimentColors[d[2]]);
+            }});
+        </script>
+    </body>
+    </html>
+    """
 
-    st.components.v1.html(html_output, height=800)
+    # Save the HTML template to a file
+    with open("d3_visualization.html", "w") as html_file:
+        html_file.write(html_template)
+    
+    # Display the HTML file in an iframe
+    st.components.v1.iframe(src="d3_visualization.html", width=1000, height=800)
