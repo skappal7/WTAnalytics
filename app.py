@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import json
-import os
 
 # Set up the Streamlit app structure
 st.title("Sentiment Analysis Visualization with D3.js")
@@ -131,21 +130,36 @@ if uploaded_file:
                     .selectAll("text")
                     .attr("class", "axis-label");
     
-                svgBarChart.selectAll(".bar")
-                    .data(groupedData)
-                    .enter().append("rect")
-                    .attr("class", "bar")
-                    .attr("x", 0)
-                    .attr("y", d => y(d[0]))
-                    .attr("width", d => x(d3.max(d[1], d => d3.max(d[1], d => d3.max(d[1], d => d.value)))))
-                    .attr("height", y.bandwidth())
-                    .attr("fill", d => sentimentColors[d[2]]);
+                groupedData.forEach((group) => {{
+                    const label = group[0];
+                    const categories = group[1];
+    
+                    const ySubgroup = d3.scaleBand()
+                        .domain(categories.map(d => d[0]))
+                        .range([0, y.bandwidth()])
+                        .padding(0.05);
+    
+                    categories.forEach((category) => {{
+                        const categoryName = category[0];
+                        const sentiments = category[1];
+    
+                        svgBarChart.selectAll(`.bar-${label}-${categoryName}`)
+                            .data(sentiments)
+                            .enter().append("rect")
+                            .attr("class", `bar bar-${label}-${categoryName}`)
+                            .attr("x", 0)
+                            .attr("y", d => y(label) + ySubgroup(d[0]))
+                            .attr("width", d => x(d.value))
+                            .attr("height", ySubgroup.bandwidth())
+                            .attr("fill", d => sentimentColors[d[0]]);
+                    }});
+                }});
             }});
         </script>
     </body>
     </html>
     """
-
+    
     # Save the HTML template to a file
     with open("d3_visualization.html", "w") as html_file:
         html_file.write(html_template)
