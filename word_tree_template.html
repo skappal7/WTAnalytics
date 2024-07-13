@@ -39,6 +39,8 @@
     <script>
         var treeData = {data};  // This will be replaced with actual data
 
+        console.log(treeData);  // Debugging: Print treeData to console
+
         function initializeWordTree(treeData) {
             var margin = {top: 20, right: 120, bottom: 20, left: 120},
                 width = 960 - margin.right - margin.left,
@@ -173,6 +175,7 @@
                 });
 
                 function diagonal(s, d) {
+                    if (!s || !d) return;
                     var path = `M ${s.y} ${s.x}
                                 C ${(s.y + d.y) / 2} ${s.x},
                                   ${(s.y + d.y) / 2} ${d.x},
