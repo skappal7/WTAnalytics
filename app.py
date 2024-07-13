@@ -3,6 +3,40 @@ import pandas as pd
 import json
 import streamlit.components.v1 as components
 
+# Function to convert CSV data to hierarchical JSON
+def csv_to_json(data):
+    tree = {"name": "All Reviews", "children": []}
+    labels = data["label"].unique()
+    
+    for label in labels:
+        label_node = {"name": label, "children": []}
+        label_data = data[data["label"] == label]
+        categories = label_data["category"].unique()
+        
+        for category in categories:
+            category_node = {"name": category, "children": []}
+            category_data = label_data[label_data["category"] == category]
+            
+            for _, row in category_data.iterrows():
+                sentiment_color = {
+                    "Negative": "lightcoral",
+                    "Positive": "lightgreen",
+                    "Neutral": "lightgrey"
+                }[row["sentiment_type"]]
+                
+                review_node = {
+                    "name": row["review"],
+                    "color": sentiment_color
+                }
+                
+                category_node["children"].append(review_node)
+            
+            label_node["children"].append(category_node)
+        
+        tree["children"].append(label_node)
+    
+    return tree
+
 # Set up the Streamlit app structure
 st.title("Sentiment Analysis Visualization with D3.js")
 
@@ -17,8 +51,8 @@ if uploaded_file:
     st.write("Uploaded Data")
     st.dataframe(data)
     
-    # Convert the data to JSON format
-    json_data = data.to_json(orient='records')
+    # Convert the data to hierarchical JSON format
+    json_data = csv_to_json(data)
     
     # Create the HTML template to embed the D3.js visualization
     html_template = open("d3_visualization.html").read()
@@ -27,10 +61,9 @@ if uploaded_file:
     components.html(html_template, height=800)
     
     # Send the data to the HTML file
-    components.iframe(src="about:blank", width=0, height=0)
     st.markdown(f"""
     <script>
-        const data = {json_data};
+        const data = {json.dumps(json_data)};
         window.parent.postMessage({{ type: "draw", data: data }}, "*");
     </script>
     """, unsafe_allow_html=True)
