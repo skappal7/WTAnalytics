@@ -115,7 +115,7 @@
                     .attr("transform", function(d) {
                         return "translate(" + source.y0 + "," + source.x0 + ")";
                     })
-                    .on('click', click)
+                    .on('click', function(event, d) { click(event, d); })
                     .on("mouseover", function(event, d) {
                         tooltip.transition()
                             .duration(200)
@@ -199,12 +199,10 @@
                 });
 
                 function diagonal(s, d) {
-                    if (!s || !d) return;
-                    var path = `M ${s.y} ${s.x}
-                                C ${(s.y + d.y) / 2} ${s.x},
-                                  ${(s.y + d.y) / 2} ${d.x},
-                                  ${d.y} ${d.x}`;
-                    return path;
+                    return `M ${s.y} ${s.x}
+                            C ${(s.y + d.y) / 2} ${s.x},
+                              ${(s.y + d.y) / 2} ${d.x},
+                              ${d.y} ${d.x}`;
                 }
 
                 function click(event, d) {
