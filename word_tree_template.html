@@ -39,12 +39,14 @@
     <script>
         var treeData = {data};  // This will be replaced with actual data
 
-        console.log(treeData);  // Debugging: Print treeData to console
-
         function initializeWordTree(treeData) {
             var margin = {top: 20, right: 120, bottom: 20, left: 120},
                 width = 960 - margin.right - margin.left,
                 height = 800 - margin.top - margin.bottom;
+
+            var i = 0; // Define i for unique node IDs
+            var duration = 750,
+                root;
 
             var svg = d3.select("#wordTree").append("svg")
                 .attr("width", width + margin.right + margin.left)
@@ -83,7 +85,7 @@
                 nodes.forEach(function(d) { d.y = d.depth * 180 });
 
                 var node = svg.selectAll('g.node')
-                    .data(nodes, function(d) { return d.id || (d.id = ++i); });
+                    .data(nodes, function(d) { return d.id || (d.id = ++i); });  // Use i to assign unique IDs
 
                 var nodeEnter = node.enter().append('g')
                     .attr('class', 'node')
