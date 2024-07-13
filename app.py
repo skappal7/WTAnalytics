@@ -60,10 +60,10 @@ if uploaded_file:
             
             // Process the data for the dendrogram
             const root = d3.stratify()
-                .id(d => d.category)
-                .parentId(d => d.label)(data)
-                .sum(d => d.value)
-                .sort((a, b) => b.height - a.height || b.value - a.value);
+                .id(function(d) {{ return d.category; }})
+                .parentId(function(d) {{ return d.label; }})(data)
+                .sum(function(d) {{ return d.value; }})
+                .sort(function(a, b) {{ return b.height - a.height || b.value - a.value; }});
 
             // Create the dendrogram
             const dendrogram = d3.tree().size([800, 400]);
@@ -78,23 +78,23 @@ if uploaded_file:
                 .enter().append("path")
                 .attr("class", "dendrogram-link")
                 .attr("d", d3.linkHorizontal()
-                    .x(d => d.y)
-                    .y(d => d.x));
+                    .x(function(d) {{ return d.y; }})
+                    .y(function(d) {{ return d.x; }}));
 
             const node = svgDendrogram.selectAll(".dendrogram-node")
                 .data(root.descendants())
                 .enter().append("g")
                 .attr("class", "dendrogram-node")
-                .attr("transform", d => `translate(${d.y},${d.x})`);
+                .attr("transform", function(d) {{ return "translate(" + d.y + "," + d.x + ")"; }});
 
             node.append("circle")
                 .attr("r", 2.5);
 
             node.append("text")
                 .attr("dy", 3)
-                .attr("x", d => d.children ? -8 : 8)
-                .style("text-anchor", d => d.children ? "end" : "start")
-                .text(d => d.data.name);
+                .attr("x", function(d) {{ return d.children ? -8 : 8; }})
+                .style("text-anchor", function(d) {{ return d.children ? "end" : "start"; }})
+                .text(function(d) {{ return d.data.name; }});
 
             // Process the data for the bar chart
             const sentimentColors = {{
@@ -103,7 +103,7 @@ if uploaded_file:
                 'Neutral': 'lightgrey'
             }};
 
-            const groupedData = d3.groups(data, d => d.label, d => d.category, d => d.sentiment);
+            const groupedData = d3.groups(data, function(d) {{ return d.label; }}, function(d) {{ return d.category; }}, function(d) {{ return d.sentiment; }});
 
             // Create the bar chart
             const margin = {{ top: 20, right: 30, bottom: 40, left: 90 }};
@@ -114,44 +114,44 @@ if uploaded_file:
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             const x = d3.scaleLinear()
                 .range([0, width])
-                .domain([0, d3.max(groupedData, d => d3.max(d[1], d => d3.max(d[1], d => d3.max(d[1], d => d.value))))]);
+                .domain([0, d3.max(groupedData, function(d) {{ return d3.max(d[1], function(d) {{ return d3.max(d[1], function(d) {{ return d3.max(d[1], function(d) {{ return d.value; }}); }}); }}); }})]);
 
             const y = d3.scaleBand()
                 .range([height, 0])
                 .padding(0.1)
-                .domain(groupedData.map(d => d[0]));
+                .domain(groupedData.map(function(d) {{ return d[0]; }}));
 
             svgBarChart.append("g")
                 .call(d3.axisLeft(y).tickSize(0))
                 .selectAll("text")
                 .attr("class", "axis-label");
 
-            groupedData.forEach((group) => {{
+            groupedData.forEach(function(group) {{
                 const label = group[0];
                 const categories = group[1];
 
                 const ySubgroup = d3.scaleBand()
-                    .domain(categories.map(d => d[0]))
+                    .domain(categories.map(function(d) {{ return d[0]; }}))
                     .range([0, y.bandwidth()])
                     .padding(0.05);
 
-                categories.forEach((category) => {{
+                categories.forEach(function(category) {{
                     const categoryName = category[0];
                     const sentiments = category[1];
 
-                    svgBarChart.selectAll(`.bar-${label}-${categoryName}`)
+                    svgBarChart.selectAll(".bar-" + label + "-" + categoryName)
                         .data(sentiments)
                         .enter().append("rect")
-                        .attr("class", `bar bar-${label}-${categoryName}`)
+                        .attr("class", "bar bar-" + label + "-" + categoryName)
                         .attr("x", 0)
-                        .attr("y", d => y(label) + ySubgroup(d[0]))
-                        .attr("width", d => x(d.value))
+                        .attr("y", function(d) {{ return y(label) + ySubgroup(d[0]); }})
+                        .attr("width", function(d) {{ return x(d.value); }})
                         .attr("height", ySubgroup.bandwidth())
-                        .attr("fill", d => sentimentColors[d[0]]);
+                        .attr("fill", function(d) {{ return sentimentColors[d[0]]; }});
                 }});
             }});
         </script>
