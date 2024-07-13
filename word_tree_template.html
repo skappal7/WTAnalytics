@@ -44,158 +44,81 @@
                 width = 960 - margin.right - margin.left,
                 height = 800 - margin.top - margin.bottom;
 
-            var i = 0,
-                duration = 750,
-                root;
-
             var svg = d3.select("#wordTree").append("svg")
                 .attr("width", width + margin.right + margin.left)
                 .attr("height", height + margin.top + margin.bottom)
                 .call(d3.zoom().on("zoom", function () {
-                    g.attr("transform", d3.event.transform)
+                    svg.attr("transform", d3.event.transform)
                  }))
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-            var g = svg.append("g");
 
             var tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            root = d3.hierarchy(treeData);
-            root.x0 = height / 2;
-            root.y0 = 0;
+            var root = d3.hierarchy(treeData);
 
-            function collapse(d) {
+            var cluster = d3.cluster()
+                .size([height, width - 160]);
+
+            cluster(root);
+
+            // Links
+            var link = svg.selectAll(".link")
+                .data(root.descendants().slice(1))
+                .enter().append("path")
+                .attr("class", "link")
+                .attr("d", function(d) {
+                    return "M" + d.y + "," + d.x
+                        + "C" + (d.parent.y + 100) + "," + d.x
+                        + " " + (d.parent.y + 100) + "," + d.parent.x
+                        + " " + d.parent.y + "," + d.parent.x;
+                });
+
+            // Nodes
+            var node = svg.selectAll(".node")
+                .data(root.descendants())
+                .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+                .on('click', click);
+
+            node.append("circle")
+                .attr("r", 10)
+                .style("stroke", function(d) {
+                    return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
+                });
+
+            node.append("text")
+                .attr("dy", ".35em")
+                .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
+                .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+                .text(function(d) { return d.data.name; });
+
+            node.on("mouseover", function(event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+                tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
+                    .style("left", (event.pageX) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function(d) {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });
+
+            function click(d) {
                 if (d.children) {
                     d._children = d.children;
                     d.children = null;
+                } else {
+                    d.children = d._children;
+                    d._children = null;
                 }
-            }
-
-            root.children.forEach(collapse);
-            update(root);
-
-            function update(source) {
-                var treeLayout = d3.tree().size([height, width]);
-                treeLayout(root);
-
-                var nodes = root.descendants(),
-                    links = root.links();
-
-                nodes.forEach(function(d) { d.y = d.depth * 180 });
-
-                var node = g.selectAll('g.node')
-                    .data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-                var nodeEnter = node.enter().append('g')
-                    .attr('class', 'node')
-                    .attr("transform", function(d) {
-                        return "translate(" + source.y0 + "," + source.x0 + ")";
-                    })
-                    .on('click', click);
-
-                nodeEnter.append('circle')
-                    .attr('r', 10)
-                    .style("stroke", function(d) {
-                        return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
-                    });
-
-                nodeEnter.append('text')
-                    .attr("dy", ".35em")
-                    .attr("x", function(d) { return d.children || d._children ? -13 : 13; })
-                    .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
-                    .text(function(d) { return d.data.name; })
-                    .style("fill-opacity", 1e-6);
-
-                nodeEnter.on("mouseover", function(event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
-                        .style("left", (event.pageX) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function(d) {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-
-                var nodeUpdate = nodeEnter.merge(node);
-
-                nodeUpdate.transition()
-                    .duration(duration)
-                    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
-
-                nodeUpdate.select('circle')
-                    .attr('r', 10)
-                    .style("stroke", function(d) {
-                        return d.data.sentiment > 0 ? "green" : (d.data.sentiment < 0 ? "red" : "lightgray");
-                    });
-
-                nodeUpdate.select('text')
-                    .style("fill-opacity", 1);
-
-                var nodeExit = node.exit().transition()
-                    .duration(duration)
-                    .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
-                    .remove();
-
-                nodeExit.select('circle')
-                    .attr('r', 1e-6);
-
-                nodeExit.select('text')
-                    .style('fill-opacity', 1e-6);
-
-                var link = g.selectAll('path.link')
-                    .data(links, function(d) { return d.target.id; });
-
-                var linkEnter = link.enter().insert('path', "g")
-                    .attr("class", "link")
-                    .attr('d', function(d){
-                        var o = {x: source.x0, y: source.y0};
-                        return diagonal(o, o);
-                    });
-
-                var linkUpdate = linkEnter.merge(link);
-
-                linkUpdate.transition()
-                    .duration(duration)
-                    .attr('d', function(d){ return diagonal(d, d.parent) });
-
-                var linkExit = link.exit().transition()
-                    .duration(duration)
-                    .attr('d', function(d) {
-                        var o = {x: source.x, y: source.y};
-                        return diagonal(o, o);
-                    })
-                    .remove();
-
-                nodes.forEach(function(d){
-                    d.x0 = d.x;
-                    d.y0 = d.y;
-                });
-
-                function diagonal(s, d) {
-                    var path = `M ${s.y} ${s.x}
-                                C ${(s.y + d.y) / 2} ${s.x},
-                                  ${(s.y + d.y) / 2} ${d.x},
-                                  ${d.y} ${d.x}`;
-                    return path;
-                }
-
-                function click(d) {
-                    if (d.children) {
-                        d._children = d.children;
-                        d.children = null;
-                    } else {
-                        d.children = d._children;
-                        d._children = null;
-                    }
-                    update(d);
-                }
+                initializeWordTree(treeData);  // Reinitialize tree to update display
             }
 
             function top10Phrases(children) {
