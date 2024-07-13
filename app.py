@@ -66,16 +66,99 @@ if uploaded_file:
     json_data = csv_to_json(data)
     
     if json_data:
-        # Create the HTML template to embed the D3.js visualization
-        html_template = open("d3_visualization.html").read()
-        
-        # Display the HTML template using Streamlit components
-        components.html(html_template, height=800)
-        
-        # Send the data to the HTML file
-        st.markdown(f"""
-        <script>
-            const data = {json.dumps(json_data)};
-            window.parent.postMessage({{ type: "draw", data: data }}, "*");
-        </script>
-        """, unsafe_allow_html=True)
+        # Display the D3.js visualization
+        components.html("""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>D3.js Visualization</title>
+            <script src="https://d3js.org/d3.v6.min.js"></script>
+            <style>
+                body {
+                    font-family: 'Poppins', sans-serif;
+                }
+                .bar {
+                    fill: steelblue;
+                }
+                .bar:hover {
+                    fill: orange;
+                }
+                .axis-label {
+                    font: 12px sans-serif;
+                }
+                .dendrogram-node circle {
+                    fill: #999;
+                }
+                .dendrogram-node text {
+                    font: 10px sans-serif;
+                }
+                .dendrogram-link {
+                    fill: none;
+                    stroke: #555;
+                    stroke-width: 1.5px;
+                }
+            </style>
+        </head>
+        <body>
+            <div id="dendrogram"></div>
+            <script>
+                function drawVisualization(data) {
+                    const margin = {top: 20, right: 90, bottom: 30, left: 90},
+                        width = 960 - margin.left - margin.right,
+                        height = 500 - margin.top - margin.bottom;
+
+                    const svg = d3.select("#dendrogram").append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                    const root = d3.hierarchy(data);
+
+                    const treeLayout = d3.tree().size([height, width]);
+
+                    treeLayout(root);
+
+                    svg.selectAll('.link')
+                        .data(root.links())
+                        .enter()
+                        .append('path')
+                        .attr('class', 'dendrogram-link')
+                        .attr('d', d3.linkHorizontal()
+                            .x(d => d.y)
+                            .y(d => d.x));
+
+                    const node = svg.selectAll('.dendrogram-node')
+                        .data(root.descendants())
+                        .enter()
+                        .append('g')
+                        .attr('class', 'dendrogram-node')
+                        .attr('transform', d => `translate(${d.y},${d.x})`)
+                        .on('click', function(event, d) {
+                            d.children = d.children ? null : d._children;
+                            drawVisualization(data);
+                        });
+
+                    node.append('circle')
+                        .attr('r', 5);
+
+                    node.append('text')
+                        .attr('dy', '.35em')
+                        .attr('x', d => d.children ? -13 : 13)
+                        .style('text-anchor', d => d.children ? 'end' : 'start')
+                        .text(d => d.data.name);
+                }
+
+                window.addEventListener("message", (event) => {
+                    if (event.data.type === "draw") {
+                        drawVisualization(event.data.data);
+                    }
+                });
+
+                const data = """ + json.dumps(json_data) + """;
+                window.parent.postMessage({ type: "draw", data: data }, "*");
+            </script>
+        </body>
+        </html>
+        """, height=800)
