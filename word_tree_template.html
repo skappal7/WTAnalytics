@@ -52,10 +52,12 @@
                 .attr("width", width + margin.right + margin.left)
                 .attr("height", height + margin.top + margin.bottom)
                 .call(d3.zoom().on("zoom", function () {
-                    svg.attr("transform", d3.event.transform)
+                    g.attr("transform", d3.event.transform)
                  }))
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var g = svg.append("g");
 
             var tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
@@ -84,7 +86,7 @@
 
                 nodes.forEach(function(d) { d.y = d.depth * 180 });
 
-                var node = svg.selectAll('g.node')
+                var node = g.selectAll('g.node')
                     .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
                 var nodeEnter = node.enter().append('g')
@@ -107,13 +109,13 @@
                     .text(function(d) { return d.data.name; })
                     .style("fill-opacity", 1e-6);
 
-                nodeEnter.on("mouseover", function(d) {
+                nodeEnter.on("mouseover", function(event, d) {
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
                     tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
-                        .style("left", (d3.event.pageX) + "px")
-                        .style("top", (d3.event.pageY - 28) + "px");
+                        .style("left", (event.pageX) + "px")
+                        .style("top", (event.pageY - 28) + "px");
                 })
                 .on("mouseout", function(d) {
                     tooltip.transition()
@@ -147,7 +149,7 @@
                 nodeExit.select('text')
                     .style('fill-opacity', 1e-6);
 
-                var link = svg.selectAll('path.link')
+                var link = g.selectAll('path.link')
                     .data(links, function(d) { return d.target.id; });
 
                 var linkEnter = link.enter().insert('path', "g")
@@ -177,7 +179,6 @@
                 });
 
                 function diagonal(s, d) {
-                    if (!s || !d) return;
                     var path = `M ${s.y} ${s.x}
                                 C ${(s.y + d.y) / 2} ${s.x},
                                   ${(s.y + d.y) / 2} ${d.x},
