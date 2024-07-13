@@ -37,7 +37,48 @@
     <div id="wordTree"></div>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script>
-        var treeData = {data};  // This will be replaced with actual data
+        // Dummy data structure for testing
+        var treeData = {
+            "name": "All Reviews",
+            "children": [
+                {
+                    "name": "People",
+                    "children": [
+                        {
+                            "name": "Support",
+                            "children": [
+                                {
+                                    "name": "Friendly",
+                                    "sentiment": 1
+                                },
+                                {
+                                    "name": "Unhelpful",
+                                    "sentiment": -1
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Process",
+                    "children": [
+                        {
+                            "name": "Ease of Use",
+                            "children": [
+                                {
+                                    "name": "Simple",
+                                    "sentiment": 1
+                                },
+                                {
+                                    "name": "Complicated",
+                                    "sentiment": -1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
 
         console.log(treeData);  // Debugging: Print treeData to console
 
@@ -63,7 +104,7 @@
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            var root = d3.hierarchy(treeData);
+            root = d3.hierarchy(treeData);
             root.x0 = height / 2;
             root.y0 = 0;
 
