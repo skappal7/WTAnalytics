@@ -10,7 +10,6 @@ import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
 
-# Function to clean and process text
 def clean_text(text, stop_words, exclude_words):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
@@ -18,47 +17,43 @@ def clean_text(text, stop_words, exclude_words):
     words = [word for word in words if word not in stop_words and word not in exclude_words and len(word) > 3]
     return words
 
-# Function to prepare hierarchical data for D3.js
 def prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences):
-    words_counter = Counter()
-
     filtered_data = data
     if sentiment_filter != 'All':
         sentiment_value = 1 if sentiment_filter == 'Positive' else -1
         filtered_data = data[data['sentiment'] == sentiment_value]
 
-    for _, row in filtered_data.iterrows():
-        words = clean_text(row['Review'], stop_words, exclude_words)
-        for word in words:
-            words_counter[word] += 1
-
     tree = {"name": "All Reviews", "children": []}
-    label_dict = {}
+    labels = filtered_data['Label'].unique()
 
-    for _, row in filtered_data.iterrows():
-        label = row['Label']
-        category = row['Category']
-        words = clean_text(row['Review'], stop_words, exclude_words)
+    for label in labels:
+        label_node = {"name": label, "children": []}
+        label_data = filtered_data[filtered_data['Label'] == label]
+        categories = label_data['Category'].unique()
 
-        if label not in label_dict:
-            label_dict[label] = {"name": label, "children": [], "sentiment": row['sentiment']}
-            tree["children"].append(label_dict[label])
+        for category in categories:
+            category_node = {"name": category, "children": []}
+            category_data = label_data[label_data['Category'] == category]
 
-        category_dict = next((item for item in label_dict[label]["children"] if item["name"] == category), None)
-        if not category_dict:
-            category_dict = {"name": category, "children": [], "sentiment": row['sentiment']}
-            label_dict[label]["children"].append(category_dict)
+            words_counter = Counter()
+            for _, row in category_data.iterrows():
+                words = clean_text(row['Review'], stop_words, exclude_words)
+                for word in words:
+                    words_counter[word] += 1
 
-        for word in words:
-            if min_occurrences <= words_counter[word] <= max_occurrences:
-                word_node = next((item for item in category_dict["children"] if item["name"] == word), None)
-                if not word_node:
-                    word_node = {"name": word, "size": words_counter[word], "sentiment": row['sentiment']}
-                    category_dict["children"].append(word_node)
+            for word, count in words_counter.items():
+                if min_occurrences <= count <= max_occurrences:
+                    word_node = {"name": word, "size": count, "sentiment": 0}
+                    for _, row in category_data.iterrows():
+                        if word in clean_text(row['Review'], stop_words, exclude_words):
+                            word_node["sentiment"] = row['sentiment']
+                    category_node["children"].append(word_node)
+
+            label_node["children"].append(category_node)
+        tree["children"].append(label_node)
 
     return tree
 
-# Function to generate the HTML for the word tree
 def generate_word_tree_html(tree_data):
     with open("word_tree_template.html", "r") as template_file:
         html_template = template_file.read()
@@ -66,7 +61,6 @@ def generate_word_tree_html(tree_data):
     html_output = html_template.replace("{data}", json.dumps(tree_data))
     return html_output
 
-# Streamlit app
 st.title("Word Tree Visualization")
 
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -82,7 +76,6 @@ if uploaded_file is not None:
     tree_data = prepare_word_tree_data(data, stop_words, exclude_words, sentiment_filter, min_occurrences, max_occurrences)
     html_output = generate_word_tree_html(tree_data)
 
-    # Display review counts
     total_reviews = len(data)
     positive_reviews = len(data[data['sentiment'] > 0])
     negative_reviews = len(data[data['sentiment'] < 0])
