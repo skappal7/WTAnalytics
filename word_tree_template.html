@@ -108,7 +108,7 @@
                     tooltip.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    tooltip.html("Category: " + d.data.name + "<br/>Top 10 Phrases: <br/>" + top10Phrases(d.data.children))
+                    tooltip.html("Label: " + d.data.label + "<br/>Category: " + d.data.category)
                         .style("left", (d3.event.pageX) + "px")
                         .style("top", (d3.event.pageY - 28) + "px");
                 })
@@ -192,12 +192,6 @@
                     }
                     update(d);
                 }
-            }
-
-            function top10Phrases(children) {
-                if (!children) return '';
-                var phrases = children.map(child => child.name).slice(0, 10);
-                return phrases.join('<br/>');
             }
         }
 
