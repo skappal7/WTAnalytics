@@ -46,7 +46,7 @@ def csv_to_json(data):
 
 # Function to generate the HTML template
 def generate_html(json_data):
-    html_template = f"""
+    html_template = """
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -83,7 +83,7 @@ def generate_html(json_data):
         <div id="dendrogram"></div>
         <div id="barchart"></div>
         <script>
-            const data = {json.dumps(json_data)};
+            const data = {data};
             
             const margin = {{top: 20, right: 90, bottom: 30, left: 90}},
                   width = 960 - margin.left - margin.right,
@@ -196,7 +196,7 @@ def generate_html(json_data):
     </body>
     </html>
     """
-    return html_template
+    return html_template.replace("{data}", json.dumps(json_data))
 
 # Set up the Streamlit app structure
 st.title("Generate Text Analytics Visualization")
@@ -224,6 +224,12 @@ if uploaded_file:
             st.success(f"HTML file has been created successfully: {output_file}")
             
             # Provide a download link for the HTML file
-            st.markdown(f"[Download the HTML file](./{output_file})")
+            with open(output_file, "rb") as file:
+                btn = st.download_button(
+                    label="Download HTML file",
+                    data=file,
+                    file_name=output_file,
+                    mime="text/html"
+                )
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
