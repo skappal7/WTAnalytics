@@ -11,22 +11,22 @@ def csv_to_json(data):
     data.columns = data.columns.str.strip()
     
     # Check if required columns exist
-    required_columns = ["review", "label", "category", "sentiment_score", "sentiment_type"]
+    required_columns = ["Review", "Label", "Category", "sentiment", "sentiment_type"]
     for col in required_columns:
         if col not in data.columns:
             st.error(f"Missing required column: {col}")
             return None
     
-    labels = data["label"].unique()
+    labels = data["Label"].unique()
     
     for label in labels:
         label_node = {"name": label, "children": []}
-        label_data = data[data["label"] == label]
-        categories = label_data["category"].unique()
+        label_data = data[data["Label"] == label]
+        categories = label_data["Category"].unique()
         
         for category in categories:
             category_node = {"name": category, "children": []}
-            category_data = label_data[label_data["category"] == category]
+            category_data = label_data[label_data["Category"] == category]
             
             for _, row in category_data.iterrows():
                 sentiment_color = {
@@ -36,7 +36,7 @@ def csv_to_json(data):
                 }[row["sentiment_type"]]
                 
                 review_node = {
-                    "name": row["review"],
+                    "name": row["Review"],
                     "color": sentiment_color
                 }
                 
