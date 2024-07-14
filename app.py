@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
+st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel
 st.markdown(
@@ -27,6 +27,7 @@ st.markdown(
     .button-container {
         display: flex;
         justify-content: center;
+        gap: 10px;
         margin-bottom: 20px;
     }
     .stTree > div {
@@ -40,8 +41,9 @@ st.markdown(
 
 st.title("Interactive Sentiment Tree Map")
 
-# File uploader
-uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+# Move file uploader to the sidebar
+st.sidebar.header("Upload your CSV file")
+uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
 
 # Color pickers in the sidebar
 st.sidebar.header("Choose Sentiment Colors")
@@ -57,16 +59,12 @@ sentiment_filter = st.sidebar.radio(
 
 if uploaded_file is not None:
     # Define a container for buttons
-    button_container = st.empty()
-    with button_container.container():
+    button_container = st.container()
+    with button_container:
         st.markdown('<div class="button-container">', unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1,1,1])
-        with col1:
-            level_1_button = st.button("Level 1")
-        with col2:
-            level_2_button = st.button("Level 2")
-        with col3:
-            level_3_button = st.button("Level 3")
+        level_1_button = st.button("Level 1", key='level1')
+        level_2_button = st.button("Level 2", key='level2')
+        level_3_button = st.button("Level 3", key='level3')
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Determine which level button was pressed
