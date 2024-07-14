@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
+st.set_page_config(page_title="Voc Pulse Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel using brand colors and fonts
 st.markdown(
@@ -46,23 +46,25 @@ st.markdown(
         color: #fff;
         text-align: center;
         border-radius: 5px;
-        padding: 5px;
+        padding: 10px;
         position: absolute;
         z-index: 1;
         bottom: 125%; /* Position above the icon */
         left: 50%;
-        margin-left: -60px;
+        transform: translateX(-50%);
         opacity: 0;
         transition: opacity 0.3s;
-        width: 220px;
         font-family: 'Poppins', sans-serif;
+        width: max-content;
+        max-width: 300px;
+        word-wrap: break-word;
     }
     .tooltip::after {
         content: "";
         position: absolute;
         top: 100%; /* Arrow at the bottom of the tooltip */
         left: 50%;
-        margin-left: -5px;
+        transform: translateX(-50%);
         border-width: 5px;
         border-style: solid;
         border-color: #555 transparent transparent transparent;
@@ -80,12 +82,12 @@ st.markdown(
 st.markdown(
     """
     <div class="title-container">
-        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
+        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">VoC Pulse Tree Map</h1>
         <span class="info-icon">ℹ️</span>
         <div class="tooltip">
             <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
             <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
-            <ul style="text-align: left;">
+            <ul style="text-align: left; margin: 0; padding: 0 0 0 20px;">
                 <li style="color: #90EE90;">Green: Positive</li>
                 <li style="color: #F08080;">Red: Negative</li>
                 <li style="color: #D3D3D3;">Gray: Neutral</li>
