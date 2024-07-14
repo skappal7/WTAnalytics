@@ -65,9 +65,9 @@ with st.expander("ⓘ Information about this visualization"):
             <p>This application serves as a valuable asset for anyone working with sentiment analysis data, offering a blend of powerful visualization capabilities and user-friendly design. It transforms complex datasets into actionable insights, enabling users to make data-driven decisions more efficiently.</p>
             <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
             <ul>
-                <li style="color: #90EE90;">Green: Positive</li>
-                <li style="color: #F08080;">Red: Negative</li>
-                <li style="color: #D3D3D3;">Gray: Neutral</li>
+                <li style="color: #07B1FC;">Blue: Positive</li>
+                <li style="color: #FAAF3B;">Yellow: Negative</li>
+                <li style="color: #979797;">Gray: Neutral</li>
             </ul>
         </div>
         """,
@@ -80,9 +80,9 @@ uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
 
 # Color pickers in the sidebar
 st.sidebar.header("Choose Sentiment Colors")
-positive_color = st.sidebar.color_picker("Positive Sentiment Color", "#90EE90")  # lightgreen
-negative_color = st.sidebar.color_picker("Negative Sentiment Color", "#F08080")  # lightcoral
-neutral_color = st.sidebar.color_picker("Neutral Sentiment Color", "#D3D3D3")    # lightgray
+positive_color = st.sidebar.color_picker("Positive Sentiment Color", "#07B1FC")  # bright blue
+negative_color = st.sidebar.color_picker("Negative Sentiment Color", "#FAAF3B")  # yellow
+neutral_color = st.sidebar.color_picker("Neutral Sentiment Color", "#979797")    # light gray
 
 # Radio buttons for filtering
 sentiment_filter = st.sidebar.radio(
