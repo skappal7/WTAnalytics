@@ -17,24 +17,6 @@ neutral_color = st.sidebar.color_picker("Neutral Sentiment Color", "#D3D3D3")   
 if uploaded_file is not None:
     # Read the uploaded CSV file
     df = pd.read_csv(uploaded_file)
-    
-    # Display the dataframe to verify data is loaded correctly
-    st.write("Data Preview:")
-    st.write(df.head())
-
-    # Verify column names
-    st.write("Column names in the data:")
-    st.write(df.columns.tolist())
-
-    # Check for unique values in the required columns
-    st.write("Unique values in 'Label' column:")
-    st.write(df['Label'].unique())
-    
-    st.write("Unique values in 'Category' column:")
-    st.write(df['Category'].unique())
-    
-    st.write("Unique values in 'sentiment_type' column:")
-    st.write(df['sentiment_type'].unique())
 
     # Preprocess data
     # Drop rows with missing values in hierarchy columns
