@@ -123,6 +123,11 @@ if uploaded_file is not None:
             hover_data={'counts': True}
         )
 
+        fig.update_traces(
+            texttemplate='<b>%{label}<br>%{value}</b>',
+            textfont=dict(color="white", size=20)  # Adjust size to fit your preference
+        )
+
         fig.update_layout(
             margin=dict(t=50, l=25, r=25, b=25),
             font=dict(family="Poppins", size=14, color='#333'),
