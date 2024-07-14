@@ -26,6 +26,16 @@ if uploaded_file is not None:
     st.write("Column names in the data:")
     st.write(df.columns.tolist())
 
+    # Check for unique values in the required columns
+    st.write("Unique values in 'Label' column:")
+    st.write(df['Label'].unique())
+    
+    st.write("Unique values in 'Category' column:")
+    st.write(df['Category'].unique())
+    
+    st.write("Unique values in 'sentiment_type' column:")
+    st.write(df['sentiment_type'].unique())
+
     # Create hierarchical data structure for tree map
     try:
         fig = px.treemap(
