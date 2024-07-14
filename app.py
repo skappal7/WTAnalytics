@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
+st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel
 st.markdown(
@@ -11,6 +11,7 @@ st.markdown(
     <style>
     .main {
         background-color: #f5f5f5;
+        padding: 20px;
     }
     .sidebar .sidebar-content {
         background-color: #e6e6e6;
@@ -28,12 +29,71 @@ st.markdown(
         font-family: 'Poppins', sans-serif;
         color: #333;
     }
+    .title-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .info-icon {
+        font-size: 24px;
+        color: #0073e6;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+    .info-icon:hover + .tooltip {
+        visibility: visible;
+        opacity: 1;
+    }
+    .tooltip {
+        visibility: hidden;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 5px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%; /* Position above the icon */
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        width: 200px;
+    }
+    .tooltip::after {
+        content: "";
+        position: absolute;
+        top: 100%; /* Arrow at the bottom of the tooltip */
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #555 transparent transparent transparent;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-st.title("Interactive Sentiment Tree Map")
+# Title and info icon
+st.markdown(
+    """
+    <div class="title-container">
+        <h1>Interactive Sentiment Tree Map</h1>
+        <span class="info-icon">ℹ️</span>
+        <div class="tooltip">
+            <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
+            <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
+            <ul>
+                <li>Green: Positive</li>
+                <li>Red: Negative</li>
+                <li>Gray: Neutral</li>
+            </ul>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Move file uploader to the sidebar
 st.sidebar.header("Upload your CSV file")
