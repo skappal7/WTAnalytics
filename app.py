@@ -24,12 +24,6 @@ st.markdown(
         margin: 5px;
         font-family: 'Poppins', sans-serif;
     }
-    .button-container {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
     .stTree > div {
         font-family: 'Poppins', sans-serif;
         color: #333;
@@ -58,26 +52,6 @@ sentiment_filter = st.sidebar.radio(
 )
 
 if uploaded_file is not None:
-    # Define a container for buttons
-    button_container = st.container()
-    with button_container:
-        st.markdown('<div class="button-container">', unsafe_allow_html=True)
-        level_1_button = st.button("Level 1", key='level1')
-        level_2_button = st.button("Level 2", key='level2')
-        level_3_button = st.button("Level 3", key='level3')
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # Determine which level button was pressed
-    if 'level' not in st.session_state:
-        st.session_state.level = 'Level 1'
-
-    if level_1_button:
-        st.session_state.level = 'Level 1'
-    elif level_2_button:
-        st.session_state.level = 'Level 2'
-    elif level_3_button:
-        st.session_state.level = 'Level 3'
-
     # Read the uploaded CSV file
     df = pd.read_csv(uploaded_file)
 
@@ -88,17 +62,9 @@ if uploaded_file is not None:
     if sentiment_filter != 'All':
         df = df[df['sentiment_type'] == sentiment_filter]
 
-    # Define paths based on selected level
-    level = st.session_state.level
-    if level == 'Level 1':
-        path = ['Label']
-        color_col = 'Label'
-    elif level == 'Level 2':
-        path = ['Label', 'Category']
-        color_col = 'Category'
-    else:
-        path = ['Label', 'Category', 'sentiment_type']
-        color_col = 'sentiment_type'
+    # Define paths for the tree map
+    path = ['Label', 'Category', 'sentiment_type']
+    color_col = 'sentiment_type'
 
     # Aggregate data to count occurrences
     aggregated_df = df.groupby(path).size().reset_index(name='counts')
