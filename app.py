@@ -46,25 +46,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Title and info box
+# Title
 st.markdown(
     """
     <div class="title-container">
         <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
     </div>
-    <div class="info-box">
-        <p>ⓘ This interactive web application provides a powerful and intuitive tool for visualizing sentiment analysis data. It's designed to help users quickly grasp complex patterns and distributions within their sentiment data through an easy-to-understand hierarchical tree map.</p>
-        <p>This application serves as a valuable asset for anyone working with sentiment analysis data, offering a blend of powerful visualization capabilities and user-friendly design. It transforms complex datasets into actionable insights, enabling users to make data-driven decisions more efficiently.</p>
-        <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
-        <ul>
-            <li style="color: #90EE90;">Green: Positive</li>
-            <li style="color: #F08080;">Red: Negative</li>
-            <li style="color: #D3D3D3;">Gray: Neutral</li>
-        </ul>
-    </div>
     """,
     unsafe_allow_html=True
 )
+
+# Collapsible info box
+with st.expander("ⓘ Information about this visualization"):
+    st.markdown(
+        """
+        <div class="info-box">
+            <p>This interactive web application provides a powerful and intuitive tool for visualizing sentiment analysis data. It's designed to help users quickly grasp complex patterns and distributions within their sentiment data through an easy-to-understand hierarchical tree map.</p>
+            <p>This application serves as a valuable asset for anyone working with sentiment analysis data, offering a blend of powerful visualization capabilities and user-friendly design. It transforms complex datasets into actionable insights, enabling users to make data-driven decisions more efficiently.</p>
+            <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
+            <ul>
+                <li style="color: #90EE90;">Green: Positive</li>
+                <li style="color: #F08080;">Red: Negative</li>
+                <li style="color: #D3D3D3;">Gray: Neutral</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # Move file uploader to the sidebar
 st.sidebar.header("Upload your CSV file")
