@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="VoC Sentiment Driver Hierarchy Report", layout="wide")
+st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel using brand colors and fonts
 st.markdown(
@@ -24,6 +24,8 @@ st.markdown(
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         font-family: 'Poppins', sans-serif;
         margin-bottom: 20px;
+        font-size: 14px; /* Reduced font size */
+        font-style: italic; /* Italic text */
     }
     .info-box ul {
         list-style-type: none;
@@ -49,10 +51,10 @@ st.markdown(
 st.markdown(
     """
     <div class="title-container">
-        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">VoC Sentiment Drivers Hierarchy Report </h1>
+        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
     </div>
     <div class="info-box">
-        <p>This interactive web application provides a powerful and intuitive tool for visualizing sentiment analysis data. It's designed to help users quickly grasp complex patterns and distributions within their sentiment data through an easy-to-understand hierarchical tree map.</p>
+        <p>ⓘ This interactive web application provides a powerful and intuitive tool for visualizing sentiment analysis data. It's designed to help users quickly grasp complex patterns and distributions within their sentiment data through an easy-to-understand hierarchical tree map.</p>
         <p>This application serves as a valuable asset for anyone working with sentiment analysis data, offering a blend of powerful visualization capabilities and user-friendly design. It transforms complex datasets into actionable insights, enabling users to make data-driven decisions more efficiently.</p>
         <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
         <ul>
