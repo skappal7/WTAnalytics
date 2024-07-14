@@ -127,7 +127,8 @@ if uploaded_file is not None:
             margin=dict(t=50, l=25, r=25, b=25),
             font=dict(family="Poppins", size=14, color='#333'),
             paper_bgcolor='#f5f5f5',
-            plot_bgcolor='#f5f5f5'
+            plot_bgcolor='#f5f5f5',
+            treemapcolorway=["#06516F", "#0098DB", "#FAAF3B", "#333333", "#979797"]
         )
 
         st.plotly_chart(fig, use_container_width=True)
