@@ -16,86 +16,48 @@ st.markdown(
     .sidebar .sidebar-content {
         background-color: #e6e6e6;
     }
-    .stButton>button {
-        color: white;
+    .info-box {
         background-color: #0073e6;
+        color: white;
+        padding: 15px;
         border-radius: 8px;
-        padding: 10px 24px;
-        font-size: 16px;
-        margin: 5px;
         font-family: 'Poppins', sans-serif;
+        margin-bottom: 20px;
+    }
+    .info-box ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .info-box li::before {
+        content: "•";
+        color: white;
+        display: inline-block; 
+        width: 1em;
+        margin-left: -1em;
     }
     .stTree > div {
         font-family: 'Poppins', sans-serif;
         color: #333;
-    }
-    .title-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .info-icon {
-        font-size: 24px;
-        color: #0073e6;
-        cursor: pointer;
-        margin-left: 10px;
-        position: relative;
-    }
-    .tooltip {
-        visibility: hidden;
-        background-color: #555;
-        color: #fff;
-        text-align: left;
-        border-radius: 5px;
-        padding: 10px;
-        position: absolute;
-        z-index: 1;
-        bottom: 150%; /* Position above the icon */
-        left: 50%;
-        transform: translateX(-50%);
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-family: 'Poppins', sans-serif;
-        width: 220px;
-        max-width: 300px;
-        word-wrap: break-word;
-    }
-    .tooltip::after {
-        content: "";
-        position: absolute;
-        top: 100%; /* Arrow at the bottom of the tooltip */
-        left: 50%;
-        transform: translateX(-50%);
-        border-width: 5px;
-        border-style: solid;
-        border-color: #555 transparent transparent transparent;
-    }
-    .info-icon:hover .tooltip {
-        visibility: visible;
-        opacity: 1;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Title and info icon
+# Title and info box
 st.markdown(
     """
     <div class="title-container">
         <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
-        <span class="info-icon">
-            ℹ️
-            <div class="tooltip">
-                <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
-                <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
-                <ul style="text-align: left; margin: 0; padding: 0 0 0 20px;">
-                    <li style="color: #90EE90;">Green: Positive</li>
-                    <li style="color: #F08080;">Red: Negative</li>
-                    <li style="color: #D3D3D3;">Gray: Neutral</li>
-                </ul>
-            </div>
-        </span>
+    </div>
+    <div class="info-box">
+        <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
+        <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
+        <ul>
+            <li style="color: #90EE90;">Green: Positive</li>
+            <li style="color: #F08080;">Red: Negative</li>
+            <li style="color: #D3D3D3;">Gray: Neutral</li>
+        </ul>
     </div>
     """,
     unsafe_allow_html=True
