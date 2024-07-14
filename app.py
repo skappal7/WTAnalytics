@@ -5,7 +5,7 @@ import streamlit as st
 # Streamlit app configuration
 st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
 
-# Custom CSS for modern look and feel
+# Custom CSS for modern look and feel using brand colors and fonts
 st.markdown(
     """
     <style>
@@ -40,10 +40,6 @@ st.markdown(
         cursor: pointer;
         margin-left: 10px;
     }
-    .info-icon:hover + .tooltip {
-        visibility: visible;
-        opacity: 1;
-    }
     .tooltip {
         visibility: hidden;
         background-color: #555;
@@ -58,7 +54,8 @@ st.markdown(
         margin-left: -60px;
         opacity: 0;
         transition: opacity 0.3s;
-        width: 200px;
+        width: 220px;
+        font-family: 'Poppins', sans-serif;
     }
     .tooltip::after {
         content: "";
@@ -70,6 +67,10 @@ st.markdown(
         border-style: solid;
         border-color: #555 transparent transparent transparent;
     }
+    .info-icon:hover + .tooltip {
+        visibility: visible;
+        opacity: 1;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -79,15 +80,15 @@ st.markdown(
 st.markdown(
     """
     <div class="title-container">
-        <h1>Interactive Sentiment Tree Map</h1>
+        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
         <span class="info-icon">ℹ️</span>
         <div class="tooltip">
             <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
             <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
-            <ul>
-                <li>Green: Positive</li>
-                <li>Red: Negative</li>
-                <li>Gray: Neutral</li>
+            <ul style="text-align: left;">
+                <li style="color: #90EE90;">Green: Positive</li>
+                <li style="color: #F08080;">Red: Negative</li>
+                <li style="color: #D3D3D3;">Gray: Neutral</li>
             </ul>
         </div>
     </div>
