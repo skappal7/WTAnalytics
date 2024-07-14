@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
+st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel using brand colors and fonts
 st.markdown(
@@ -17,8 +17,8 @@ st.markdown(
         background-color: #e6e6e6;
     }
     .info-box {
-        background-color: #0073e6;
-        color: white;
+        background-color: #d3d3d3;
+        color: #333;
         padding: 15px;
         border-radius: 8px;
         font-family: 'Poppins', sans-serif;
@@ -30,7 +30,7 @@ st.markdown(
     }
     .info-box li::before {
         content: "•";
-        color: white;
+        color: #333;
         display: inline-block; 
         width: 1em;
         margin-left: -1em;
@@ -48,10 +48,11 @@ st.markdown(
 st.markdown(
     """
     <div class="title-container">
-        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
+        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Voice of The Customer Tree Map</h1>
     </div>
     <div class="info-box">
-        <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
+        <p>This interactive web application provides a powerful and intuitive tool for visualizing sentiment analysis data. It's designed to help users quickly grasp complex patterns and distributions within their sentiment data through an easy-to-understand hierarchical tree map.</p>
+        <p>This application serves as a valuable asset for anyone working with sentiment analysis data, offering a blend of powerful visualization capabilities and user-friendly design. It transforms complex datasets into actionable insights, enabling users to make data-driven decisions more efficiently.</p>
         <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
         <ul>
             <li style="color: #90EE90;">Green: Positive</li>
