@@ -73,10 +73,13 @@ if uploaded_file is not None:
     # Define paths based on selected level
     if level == 'Level 1':
         path = ['Label']
+        color_col = 'Label'
     elif level == 'Level 2':
         path = ['Label', 'Category']
+        color_col = 'Category'
     else:
         path = ['Label', 'Category', 'sentiment_type']
+        color_col = 'sentiment_type'
 
     # Aggregate data to count occurrences
     aggregated_df = df.groupby(path).size().reset_index(name='counts')
@@ -87,7 +90,7 @@ if uploaded_file is not None:
             aggregated_df,
             path=path,
             values='counts',
-            color='sentiment_type',
+            color=color_col,
             color_discrete_map={
                 'Positive': positive_color,
                 'Negative': negative_color,
