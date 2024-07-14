@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
+st.set_page_config(page_title="VoC Sentiment Driver Hierarchy Report", layout="wide")
 
 # Custom CSS for modern look and feel using brand colors and fonts
 st.markdown(
@@ -17,10 +17,11 @@ st.markdown(
         background-color: #e6e6e6;
     }
     .info-box {
-        background-color: #d3d3d3;
+        background-color: #f9f9f9; /* Very light grey */
         color: #333;
         padding: 15px;
         border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         font-family: 'Poppins', sans-serif;
         margin-bottom: 20px;
     }
@@ -48,7 +49,7 @@ st.markdown(
 st.markdown(
     """
     <div class="title-container">
-        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Voice of The Customer Tree Map</h1>
+        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">VoC Sentiment Drivers Hierarchy Report </h1>
     </div>
     <div class="info-box">
         <p>This interactive web application provides a powerful and intuitive tool for visualizing sentiment analysis data. It's designed to help users quickly grasp complex patterns and distributions within their sentiment data through an easy-to-understand hierarchical tree map.</p>
