@@ -36,19 +36,26 @@ if uploaded_file is not None:
     st.write("Unique values in 'sentiment_type' column:")
     st.write(df['sentiment_type'].unique())
 
+    # Preprocess data
+    # Drop rows with missing values in hierarchy columns
+    df.dropna(subset=['Label', 'Category', 'sentiment_type'], inplace=True)
+
+    # Aggregate data to count occurrences
+    aggregated_df = df.groupby(['Label', 'Category', 'sentiment_type']).size().reset_index(name='counts')
+
     # Create hierarchical data structure for tree map
     try:
         fig = px.treemap(
-            df,
+            aggregated_df,
             path=['Label', 'Category', 'sentiment_type'],
-            values='sentiment',  # Assuming 'sentiment' is a numerical value for the size of each block
+            values='counts',  # Use counts as the size of each block
             color='sentiment_type',
             color_discrete_map={
                 'Positive': positive_color,
                 'Negative': negative_color,
                 'Neutral': neutral_color
             },
-            hover_data={'Review': True, 'sentiment': True}
+            hover_data={'counts': True}
         )
 
         fig.update_layout(margin=dict(t=50, l=25, r=25, b=25))
