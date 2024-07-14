@@ -17,23 +17,36 @@ neutral_color = st.sidebar.color_picker("Neutral Sentiment Color", "#D3D3D3")   
 if uploaded_file is not None:
     # Read the uploaded CSV file
     df = pd.read_csv(uploaded_file)
+    
+    # Display the dataframe to verify data is loaded correctly
+    st.write("Data Preview:")
+    st.write(df.head())
+
+    # Verify column names
+    st.write("Column names in the data:")
+    st.write(df.columns.tolist())
 
     # Create hierarchical data structure for tree map
-    fig = px.treemap(
-        df,
-        path=['Label', 'Category', 'sentiment_type'],
-        values='sentiment',  # Assuming 'sentiment' is a numerical value for the size of each block
-        color='sentiment_type',
-        color_discrete_map={
-            'Positive': positive_color,
-            'Negative': negative_color,
-            'Neutral': neutral_color
-        },
-        hover_data={'Review': True, 'sentiment': True}
-    )
+    try:
+        fig = px.treemap(
+            df,
+            path=['Label', 'Category', 'sentiment_type'],
+            values='sentiment',  # Assuming 'sentiment' is a numerical value for the size of each block
+            color='sentiment_type',
+            color_discrete_map={
+                'Positive': positive_color,
+                'Negative': negative_color,
+                'Neutral': neutral_color
+            },
+            hover_data={'Review': True, 'sentiment': True}
+        )
 
-    fig.update_layout(margin=dict(t=50, l=25, r=25, b=25))
+        fig.update_layout(margin=dict(t=50, l=25, r=25, b=25))
 
-    st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
+    except ValueError as e:
+        st.error(f"ValueError: {e}")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
 else:
     st.write("Please upload a CSV file to generate the tree map.")
