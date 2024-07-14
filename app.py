@@ -125,7 +125,7 @@ if uploaded_file is not None:
 
         fig.update_traces(
             texttemplate='<b>%{label}<br>%{value}</b>',
-            textfont=dict(color="white", size=20)  # Adjust size to fit your preference
+            textfont=dict(family="Poppins", color="white", size=20)  # Ensure font is Poppins and adjust size to fit your preference
         )
 
         fig.update_layout(
