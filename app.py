@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
+st.set_page_config(page_title="VoC Pulse Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel
 st.markdown(
@@ -23,9 +23,10 @@ st.markdown(
         font-size: 16px;
         margin: 5px 5px;
     }
-    .stRadio > div {
+    .button-container {
         display: flex;
         justify-content: center;
+        margin-bottom: 20px;
     }
     .stTree > div {
         font-family: 'Poppins', sans-serif;
@@ -53,13 +54,27 @@ sentiment_filter = st.sidebar.radio(
     ('All', 'Positive', 'Negative', 'Neutral')
 )
 
-# Level selection buttons
-level = st.sidebar.radio(
-    "Select Level",
-    ('Level 1', 'Level 2', 'Level 3')
-)
-
 if uploaded_file is not None:
+    # Define a container for buttons
+    button_container = st.empty()
+    with button_container.container():
+        st.markdown('<div class="button-container">', unsafe_allow_html=True)
+        level_1_button = st.button("Level 1")
+        level_2_button = st.button("Level 2")
+        level_3_button = st.button("Level 3")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # Determine which level button was pressed
+    if 'level' not in st.session_state:
+        st.session_state.level = 'Level 1'
+
+    if level_1_button:
+        st.session_state.level = 'Level 1'
+    elif level_2_button:
+        st.session_state.level = 'Level 2'
+    elif level_3_button:
+        st.session_state.level = 'Level 3'
+
     # Read the uploaded CSV file
     df = pd.read_csv(uploaded_file)
 
@@ -71,6 +86,7 @@ if uploaded_file is not None:
         df = df[df['sentiment_type'] == sentiment_filter]
 
     # Define paths based on selected level
+    level = st.session_state.level
     if level == 'Level 1':
         path = ['Label']
         color_col = 'Label'
