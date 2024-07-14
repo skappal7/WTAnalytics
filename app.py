@@ -21,15 +21,15 @@ if uploaded_file is not None:
     # Create hierarchical data structure for tree map
     fig = px.treemap(
         df,
-        path=['Labels', 'Categories', 'Sentiment Types'],
-        values='Sentiment Score',
-        color='Sentiment Types',
+        path=['Label', 'Category', 'sentiment_type'],
+        values='sentiment',  # Assuming 'sentiment' is a numerical value for the size of each block
+        color='sentiment_type',
         color_discrete_map={
             'Positive': positive_color,
             'Negative': negative_color,
             'Neutral': neutral_color
         },
-        hover_data={'Raw Reviews': True, 'Sentiment Score': True}
+        hover_data={'Review': True, 'sentiment': True}
     )
 
     fig.update_layout(margin=dict(t=50, l=25, r=25, b=25))
