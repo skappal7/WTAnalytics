@@ -21,7 +21,8 @@ st.markdown(
         border-radius: 8px;
         padding: 10px 24px;
         font-size: 16px;
-        margin: 5px 5px;
+        margin: 5px;
+        font-family: 'Poppins', sans-serif;
     }
     .button-container {
         display: flex;
@@ -59,9 +60,13 @@ if uploaded_file is not None:
     button_container = st.empty()
     with button_container.container():
         st.markdown('<div class="button-container">', unsafe_allow_html=True)
-        level_1_button = st.button("Level 1")
-        level_2_button = st.button("Level 2")
-        level_3_button = st.button("Level 3")
+        col1, col2, col3 = st.columns([1,1,1])
+        with col1:
+            level_1_button = st.button("Level 1")
+        with col2:
+            level_2_button = st.button("Level 2")
+        with col3:
+            level_3_button = st.button("Level 3")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Determine which level button was pressed
