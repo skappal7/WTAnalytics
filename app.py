@@ -1,17 +1,36 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from collections import Counter
-import matplotlib.pyplot as plt
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
-nltk.download('punkt')
-nltk.download('stopwords')
 
 # Streamlit app
-st.title("Interactive Sentiment Tree Map with Word Frequency Analysis")
+st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
+
+# Custom CSS for modern look and feel
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #f5f5f5;
+    }
+    .sidebar .sidebar-content {
+        background-color: #e6e6e6;
+    }
+    .stButton>button {
+        color: white;
+        background-color: #0073e6;
+        border-radius: 8px;
+        padding: 10px 24px;
+    }
+    .stRadio > div {
+        display: flex;
+        justify-content: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.title("Interactive Sentiment Tree Map")
 
 # File uploader
 uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -58,32 +77,14 @@ if uploaded_file is not None:
             hover_data={'counts': True}
         )
 
-        fig.update_layout(margin=dict(t=50, l=25, r=25, b=25))
+        fig.update_layout(
+            margin=dict(t=50, l=25, r=25, b=25),
+            font=dict(family="Poppins", size=14),
+            paper_bgcolor='#f5f5f5',
+            plot_bgcolor='#f5f5f5'
+        )
 
         st.plotly_chart(fig, use_container_width=True)
-
-        # Function to calculate word frequencies
-        def calculate_word_frequencies(category):
-            reviews = df[df['Category'] == category]['Review']
-            words = word_tokenize(' '.join(reviews).lower())
-            filtered_words = [word for word in words if word.isalnum() and word not in stopwords.words('english')]
-            return Counter(filtered_words).most_common(10)
-
-        # Display word frequencies for a selected category
-        category_selected = st.selectbox("Select a Category to View Word Frequencies", df['Category'].unique())
-        word_frequencies = calculate_word_frequencies(category_selected)
-
-        if word_frequencies:
-            words, counts = zip(*word_frequencies)
-            plt.figure(figsize=(10, 6))
-            plt.bar(words, counts, color='skyblue')
-            plt.xlabel('Words')
-            plt.ylabel('Counts')
-            plt.title(f'Most Common Words in {category_selected}')
-            st.pyplot(plt)
-        else:
-            st.write("No words to display for the selected category.")
-
     except ValueError as e:
         st.error(f"ValueError: {e}")
     except Exception as e:
