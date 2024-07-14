@@ -3,7 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 # Streamlit app configuration
-st.set_page_config(page_title="Voc Pulse Tree Map", layout="wide")
+st.set_page_config(page_title="Sentiment Tree Map", layout="wide")
 
 # Custom CSS for modern look and feel using brand colors and fonts
 st.markdown(
@@ -39,23 +39,24 @@ st.markdown(
         color: #0073e6;
         cursor: pointer;
         margin-left: 10px;
+        position: relative;
     }
     .tooltip {
         visibility: hidden;
         background-color: #555;
         color: #fff;
-        text-align: center;
+        text-align: left;
         border-radius: 5px;
         padding: 10px;
         position: absolute;
         z-index: 1;
-        bottom: 125%; /* Position above the icon */
+        bottom: 150%; /* Position above the icon */
         left: 50%;
         transform: translateX(-50%);
         opacity: 0;
         transition: opacity 0.3s;
         font-family: 'Poppins', sans-serif;
-        width: max-content;
+        width: 220px;
         max-width: 300px;
         word-wrap: break-word;
     }
@@ -69,7 +70,7 @@ st.markdown(
         border-style: solid;
         border-color: #555 transparent transparent transparent;
     }
-    .info-icon:hover + .tooltip {
+    .info-icon:hover .tooltip {
         visibility: visible;
         opacity: 1;
     }
@@ -82,17 +83,19 @@ st.markdown(
 st.markdown(
     """
     <div class="title-container">
-        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">VoC Pulse Tree Map</h1>
-        <span class="info-icon">ℹ️</span>
-        <div class="tooltip">
-            <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
-            <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
-            <ul style="text-align: left; margin: 0; padding: 0 0 0 20px;">
-                <li style="color: #90EE90;">Green: Positive</li>
-                <li style="color: #F08080;">Red: Negative</li>
-                <li style="color: #D3D3D3;">Gray: Neutral</li>
-            </ul>
-        </div>
+        <h1 style="font-family: 'Poppins', sans-serif; color: #333;">Interactive Sentiment Tree Map</h1>
+        <span class="info-icon">
+            ℹ️
+            <div class="tooltip">
+                <p>This app visualizes sentiment analysis data using a hierarchical tree map.</p>
+                <p>Box sizes represent the frequency of occurrences, and colors indicate sentiment:</p>
+                <ul style="text-align: left; margin: 0; padding: 0 0 0 20px;">
+                    <li style="color: #90EE90;">Green: Positive</li>
+                    <li style="color: #F08080;">Red: Negative</li>
+                    <li style="color: #D3D3D3;">Gray: Neutral</li>
+                </ul>
+            </div>
+        </span>
     </div>
     """,
     unsafe_allow_html=True
