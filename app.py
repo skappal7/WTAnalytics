@@ -25,7 +25,6 @@ st.markdown(
         font-family: 'Poppins', sans-serif;
         margin-bottom: 20px;
         font-size: 14px; /* Reduced font size */
-        font-style: italic; /* Italic text */
     }
     .info-box ul {
         list-style-type: none;
